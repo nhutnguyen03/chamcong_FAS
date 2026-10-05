@@ -110,15 +110,9 @@ main {
   fill: #20a36a;
 }
 
-.annual-chart {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.annual-chart svg {
+#yearChart svg {
   display: block;
   width: 100%;
-  min-width: 560px;
   height: auto;
 }
 
@@ -129,7 +123,7 @@ main {
 
 .chart-axis {
   fill: var(--color-muted);
-  font: 11px system-ui, sans-serif;
+  font: 12px system-ui, sans-serif;
 }
 
 .year-total th {

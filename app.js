@@ -41,14 +41,14 @@ function renderYear(){
     const sum=k=>R.reduce((a,r)=>a+(Number(r[k])||0),0),work=R.filter(r=>r.status==='work'),days=work.reduce((a,r)=>a+(r.halfDay?0.5:1),0),hours=sum('totalSec')/3600,overtime=sum('overtimeSec')/3600;
     return{key,month:i+1,records:R.length,days,hours,overtime,average:days?hours/days:0,expected:sum('expectedTotal'),received:P.reduce((a,p)=>a+(Number(p.amount)||0),0)};
   });
-  const records=months.reduce((a,m)=>a+m.records,0),totalHours=months.reduce((a,m)=>a+m.hours,0),totalOvertime=months.reduce((a,m)=>a+m.overtime,0),totalDays=months.reduce((a,m)=>a+m.days,0),totalExpected=months.reduce((a,m)=>a+m.expected,0),totalReceived=months.reduce((a,m)=>a+m.received,0),active=months.filter(m=>m.records);
-  const extrema=fn=>{if(!active.length)return'—';const value=fn(active[0]);return active.filter(m=>fn(m)===value).map(m=>`T${m.month}`).join(', ')};
+  const totalHours=months.reduce((a,m)=>a+m.hours,0),totalOvertime=months.reduce((a,m)=>a+m.overtime,0),totalDays=months.reduce((a,m)=>a+m.days,0),totalExpected=months.reduce((a,m)=>a+m.expected,0),totalReceived=months.reduce((a,m)=>a+m.received,0),worked=months.filter(m=>m.days>0);
+  const extrema=(fn,pick)=>{if(!worked.length)return'—';const value=pick(...worked.map(fn));return worked.filter(m=>fn(m)===value).map(m=>`T${m.month}`).join(', ')};
   $('#yearStats').innerHTML=[
     ['Tổng lương dự kiến',money(totalExpected)],['Tổng thực nhận',money(totalReceived)],['Số ngày làm quy đổi',`${totalDays.toLocaleString('vi-VN')} công`],
-    ['Tổng giờ làm',`${totalHours.toFixed(2)} giờ`],['Tổng giờ tăng ca',`${totalOvertime.toFixed(2)} giờ`],['Giờ làm TB/tháng',`${(totalHours/12).toFixed(2)} giờ`],
-    ['Tháng nhiều công nhất',extrema(m=>m.days)],['Tháng ít công nhất',extrema(m=>m.days)]
-  ].map(([label,value],i)=>`<div>${label}<b>${value}</b>${i===5?'<small>Trung bình trên 12 tháng</small>':''}${i===6||i===7?'<small>Trong các tháng có chấm công</small>':''}</div>`).join('');
-  const max=Math.max(0,...months.flatMap(m=>[m.expected,m.received])),min=Math.min(0,...months.flatMap(m=>[m.expected,m.received])),spread=max-min,range=spread||1,chartW=960,chartH=300,top=22,bottom=42,left=58,right=12,plotH=chartH-top-bottom,plotW=chartW-left-right,barW=13,zeroY=top+plotH*max/range;
+    ['Tổng giờ làm',`${totalHours.toFixed(2)} giờ`],['Tổng giờ tăng ca',`${totalOvertime.toFixed(2)} giờ`],['Giờ làm TB/tháng',worked.length?`${(totalHours/worked.length).toFixed(2)} giờ`:'—'],
+    ['Tháng nhiều công nhất',extrema(m=>m.days,Math.max)],['Tháng ít công nhất',worked.length<2?'—':extrema(m=>m.days,Math.min)]
+  ].map(([label,value],i)=>`<div>${label}<b>${value}</b>${i===5?`<small>Trung bình trên ${worked.length} tháng có ngày làm</small>`:''}${i===6||i===7?'<small>Trong các tháng có ngày làm</small>':''}</div>`).join('');
+  const max=Math.max(0,...months.flatMap(m=>[m.expected,m.received])),min=Math.min(0,...months.flatMap(m=>[m.expected,m.received])),spread=max-min,range=spread||1,chartW=480,chartH=300,top=22,bottom=42,left=46,right=8,plotH=chartH-top-bottom,plotW=chartW-left-right,barW=8,zeroY=top+plotH*max/range;
   const lines=Array.from({length:5},(_,i)=>{const y=top+plotH*i/4,value=max-spread*i/4;return`<line x1="${left}" y1="${y}" x2="${chartW-right}" y2="${y}" class="chart-grid"/><text x="${left-8}" y="${y+4}" text-anchor="end" class="chart-axis">${compactMoney(value)}</text>`}).join('');
   const bar=(x,value,kind,month)=>{const height=Math.abs(value)*plotH/range,y=value>=0?zeroY-height:zeroY;return`<rect x="${x}" y="${y}" width="${barW}" height="${height}" rx="2" class="${kind}"><title>T${month}: ${kind==='bar-expected'?'lương dự kiến':'thực nhận'} ${money(value)}</title></rect>`};
   const bars=months.map((m,i)=>{const center=left+plotW*(i+.5)/12;return`${bar(center-barW-2,m.expected,'bar-expected',m.month)}${bar(center+2,m.received,'bar-paid',m.month)}<text x="${center}" y="${chartH-14}" text-anchor="middle" class="chart-axis">T${m.month}</text>`}).join('');
