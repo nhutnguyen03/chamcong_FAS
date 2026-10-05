@@ -20,6 +20,10 @@ const fill=(p,o)=>{keys.forEach(k=>k==='sched'?setTime(p+k,o[k]):$('#'+p+k).valu
 $('#sf').innerHTML=fields('s_');
 const money=n=>Math.round(n||0).toLocaleString('vi-VN')+' ₫',hr=s=>((s||0)/3600).toFixed(2);
 const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh'}).format(new Date());
+let S=DEF,recs=[],pays=[],ym=today.slice(0,7),year=+today.slice(0,4),cur=null;
+const toast=(m)=>{const t=$('#toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2500)};
+async function load(){recs=await all('attendance');pays=await all('payments');S={...DEF,...((await all('settings')).find(x=>x.id==='default')||{})};render()}
+const monthRecs=()=>recs.filter(r=>r.workDate.startsWith(ym)).sort((a,b)=>a.workDate<b.workDate?-1:1);
 function render(){renderCal();renderPay();renderYear();fill('s_',S);conv()}
 function renderCal(){const[y,m]=ym.split('-').map(Number);$('#ml').textContent=`Tháng ${m}/${y}`;const first=new Date(Date.UTC(y,m-1,1)),off=(first.getUTCDay()+6)%7;let h=['T2','T3','T4','T5','T6','T7','CN'].map(d=>`<div class=h>${d}</div>`).join('');
 for(let i=0;i<42;i++){const d=new Date(Date.UTC(y,m-1,1-off+i)),ds=d.toISOString().slice(0,10),r=recs.find(x=>x.workDate===ds);const cls=['day',d.getUTCMonth()!==m-1&&'o',ds===today&&'t',r&&(r.status==='work'?(r.lateIntervals||r.earlyIntervals?'l':'w'):r.status==='unpaid'?'u':'v')].filter(Boolean).join(' ');
