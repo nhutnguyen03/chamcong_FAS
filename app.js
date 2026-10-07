@@ -22,7 +22,7 @@ const fill=(p,o)=>{keys.forEach(k=>k==='sched'?setTime(p+k,o[k]):$('#'+p+k).valu
 $('#sf').innerHTML=fields('s_');
 const money=n=>Math.round(n||0).toLocaleString('vi-VN')+' ₫',hr=s=>((s||0)/3600).toFixed(2);
 const formatDate=d=>{const[y,m,day]=String(d||'').split('-');return y&&m&&day?`${day}-${m}-${y}`:d};
-const shiftLabel=(type,hours)=>({ '6-day':'Ca 6 tiếng','8-day':'Ca 8 tiếng (ngày)','8-night':'Ca 8 tiếng (đêm)','11-day':'Ca 11 tiếng (ngày)','11-night':'Ca 11 tiếng (đêm)','13-day':'Ca 13 tiếng (6h-19h)' }[type]||`Ca ${hours} tiếng`);
+const shiftLabel=(type,hours)=>({ '5-day':'Ca 5 tiếng','6-day':'Ca 6 tiếng','8-day':'Ca 8 tiếng (ngày)','8-night':'Ca 8 tiếng (đêm)','11-day':'Ca 11 tiếng (ngày)','11-night':'Ca 11 tiếng (đêm)','13-day':'Ca 13 tiếng (6h-19h)' }[type]||`Ca ${hours} tiếng`);
 const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh'}).format(new Date());
 let S=DEF,recs=[],pays=[],ym=today.slice(0,7),year=+today.slice(0,4),cur=null;
 const toast=(m)=>{const t=$('#toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2500)};

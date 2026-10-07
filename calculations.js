@@ -2,7 +2,7 @@ export const toSec=t=>{if(!t)return null;const[a,b=0,c=0]=t.split(':').map(Numbe
 // Nguồn tính toán duy nhất. Không làm tròn trung gian; chỉ làm tròn expectedTotal.
 function calcShift(i){
   const errors=[],shiftHours=+i.shiftHours,interval=+i.interval,lateMinutes=i.lateEnabled?Math.max(0,+i.lateMinutes||0):0;
-  if(![6,8,11,13].includes(shiftHours))errors.push('Ca làm phải là 6, 8, 11 hoặc 13 tiếng');
+  if(![5,6,8,11,13].includes(shiftHours))errors.push('Ca làm phải là 5, 6, 8, 11 hoặc 13 tiếng');
   if(!(interval>0))errors.push('Mốc đi trễ phải > 0');
   if(+i.lateMinutes<0)errors.push('Phút đi trễ không hợp lệ');
   if(+i.overtimeHours<0)errors.push('Giờ tăng ca không hợp lệ');

@@ -7,6 +7,7 @@ WorkPay hỗ trợ theo dõi chấm công, ước tính lương và ghi nhận c
 1. Mở mục **Lịch**, dùng nút **‹** và **›** để chuyển tháng hoặc **Tháng hiện tại** để quay về tháng hiện tại.
 2. Chọn ngày cần chấm công. Tiêu đề ngày trong cửa sổ chấm công dùng định dạng **DD-MM-YYYY**.
 3. Chọn **Trạng thái** và **Ca**:
+   - Ca 5 tiếng
    - Ca 6 tiếng
    - Ca 8 tiếng (ngày) hoặc ca 8 tiếng (đêm)
    - Ca 11 tiếng (ngày) hoặc ca 11 tiếng (đêm)
@@ -33,7 +34,7 @@ Mở **Thiết lập** để xem hoặc thay đổi mức lương và các thôn
 
 - Đơn giá mặc định ban đầu: ca 8 tiếng ban ngày **255.000đ**, ca 13 tiếng **450.000đ**, ca đêm 8 tiếng **309.500đ**, ca đêm 11 tiếng **426.500đ**.
 - Ca ngày Chủ nhật 13 tiếng là **832.000đ**; ca đêm Chủ nhật 11 tiếng là **758.500đ**.
-- Đơn giá ca 6 tiếng và ca 11 tiếng ban ngày để trống ban đầu. Khi dùng phương thức lương ngày, các ca này tính theo **Lương giờ × số giờ ca** cho đến khi nhập đơn giá riêng.
+- Đơn giá ca 5 tiếng, ca 6 tiếng và ca 11 tiếng ban ngày để trống ban đầu. Khi dùng phương thức lương ngày, các ca này tính theo **Lương giờ × số giờ ca** cho đến khi nhập đơn giá riêng.
 - Nếu chọn phương thức **Lương giờ**, tiền ca được tính theo số giờ ca nhân với Lương giờ.
 - Mức chuyên cần mặc định là **250.000đ** khi đạt ít nhất **26 công quy đổi** trong tháng. Ngày làm đủ tính 1 công, ngày làm nửa ngày tính 0,5 công; trạng thái nghỉ không tính công.
 - Ca Chủ nhật được xác định theo ngày dương lịch rơi vào Chủ nhật.
