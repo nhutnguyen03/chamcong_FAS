@@ -29,6 +29,14 @@ header {
   font-weight: 700;
 }
 
+header small {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+
 main {
   width: min(100%, 1000px);
   margin: 0 auto;
@@ -218,6 +226,9 @@ nav button.on {
 }
 
 .day {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   min-width: 0;
   min-height: 62px;
   padding: 4px;
@@ -226,10 +237,96 @@ nav button.on {
   border-radius: 6px;
   background: #fff;
   font-size: 11px;
-  line-height: 1.35;
+  line-height: 1.2;
   cursor: pointer;
   overflow-wrap: anywhere;
   -webkit-tap-highlight-color: transparent;
+}
+
+.day-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+}
+
+.event-dots {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.event-dot {
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 50%;
+}
+
+.event-dot.lunar {
+  background: #8b5cf6;
+}
+
+.event-dot.holiday {
+  background: #dc4545;
+}
+
+.event-dot.event {
+  background: #3182ce;
+}
+
+.calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 6px 0 0;
+  color: var(--color-muted);
+  font-size: 11px;
+}
+
+.calendar-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.calendar-info {
+  margin: 9px 0 12px;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.calendar-date-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+.calendar-events {
+  margin-top: 9px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #f8faff;
+  color: var(--color-text);
+}
+
+.calendar-events > b {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.calendar-event {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.calendar-event > span:first-child {
+  flex: 0 0 auto;
+  font-size: 13px;
 }
 
 .day.o {
@@ -390,6 +487,10 @@ dialog::backdrop {
     font-size: 16px;
   }
 
+  header small {
+    font-size: 10px;
+  }
+
   main {
     padding: 8px;
   }
@@ -447,6 +548,16 @@ dialog::backdrop {
 
   dialog {
     padding: 12px;
+  }
+
+  .calendar-info {
+    margin: 7px 0 9px;
+    font-size: 12px;
+  }
+
+  .calendar-events {
+    margin-top: 7px;
+    padding: 7px 8px;
   }
 }
 
