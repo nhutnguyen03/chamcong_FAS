@@ -20,6 +20,54 @@ const keys=['payMode','sched','shortRule'];
 const get=p=>({...Object.fromEntries(keys.map(k=>[k,k==='sched'?readTime(p+k):$('#'+p+k).value])),...Object.fromEntries(NUM.map(([k])=>[k,OPTIONAL_RATES.has(k)&&!$('#'+p+k).value.trim()?null:+$('#'+p+k).value])),lateEnabled:$('#'+p+'lateEnabled').checked});
 const fill=(p,o)=>{keys.forEach(k=>k==='sched'?setTime(p+k,o[k]):$('#'+p+k).value=o[k]);NUM.forEach(([k])=>$('#'+p+k).value=o[k]??'');$('#'+p+'lateEnabled').checked=o.lateEnabled};
 $('#sf').innerHTML=fields('s_');
+const supportDialog=$('#supportDlg'),supportToast=$('#supportToast');
+let supportToastTimer;
+const showSupportToast=message=>{supportToast.textContent=message;supportToast.hidden=false;clearTimeout(supportToastTimer);supportToastTimer=setTimeout(()=>{supportToast.hidden=true},2000)};
+$('#supportOpen').addEventListener('click',()=>supportDialog.showModal());
+$('#supportClose').addEventListener('click',()=>supportDialog.close());
+supportDialog.addEventListener('click',event=>{if(event.target===supportDialog)supportDialog.close()});
+supportDialog.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();supportDialog.close()}});
+supportDialog.querySelectorAll('.support-method').forEach(card=>{
+  card.addEventListener('click',event=>{
+    if(event.target.closest('button, .support-qr'))return;
+    card.querySelector('.support-qr-toggle').click();
+  });
+});
+supportDialog.querySelectorAll('.support-qr-toggle').forEach(button=>button.addEventListener('click',()=>{
+  const qr=$('#'+button.getAttribute('aria-controls'));
+  const show=qr.hidden;
+  qr.hidden=!show;
+  button.setAttribute('aria-expanded',String(show));
+  button.textContent=show?'Ẩn QR':'Xem QR';
+}));
+supportDialog.querySelectorAll('[data-hide]').forEach(button=>button.addEventListener('click',()=>{
+  const qr=$('#'+button.dataset.hide);
+  qr.hidden=true;
+  supportDialog.querySelector(`[aria-controls="${button.dataset.hide}"]`).setAttribute('aria-expanded','false');
+  supportDialog.querySelector(`[aria-controls="${button.dataset.hide}"]`).textContent='Xem QR';
+}));
+supportDialog.querySelectorAll('[data-copy]').forEach(button=>button.addEventListener('click',async()=>{
+  const value=button.dataset.copy;
+  try{
+    if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(value);
+    else{
+      const input=document.createElement('textarea');
+      input.value=value;
+      input.setAttribute('readonly','');
+      input.style.position='fixed';
+      input.style.opacity='0';
+      document.body.append(input);
+      input.select();
+      const copied=document.execCommand('copy');
+      input.remove();
+      if(!copied)throw new Error('Clipboard copy was rejected');
+    }
+    showSupportToast(button.dataset.copyLabel==='số MoMo'?'Đã sao chép số MoMo!':'Đã sao chép số tài khoản');
+  }catch(error){
+    console.error('Không thể sao chép thông tin ủng hộ:',error);
+    showSupportToast('Không thể sao chép. Vui lòng thử lại.');
+  }
+}));
 const money=n=>Math.round(n||0).toLocaleString('vi-VN')+' ₫',hr=s=>((s||0)/3600).toFixed(2);
 const formatDate=d=>{const[y,m,day]=String(d||'').split('-');return y&&m&&day?`${day}-${m}-${y}`:d};
 const shiftLabel=(type,hours)=>({ '5-day':'Ca 5 tiếng','6-day':'Ca 6 tiếng','8-day':'Ca 8 tiếng (ngày)','8-night':'Ca 8 tiếng (đêm)','11-day':'Ca 11 tiếng (ngày)','11-night':'Ca 11 tiếng (đêm)','13-day':'Ca 13 tiếng (6h-19h)' }[type]||`Ca ${hours} tiếng`);

@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WorkPay – Chấm công & Tính lương</title>
 <link rel="stylesheet" href="styles.css"></head><body>
-<header><div>WorkPay – Chấm công &amp; Tính lương</div><small>Thiết kế và Phát triển bởi Nhựt Nguyễn - Contact: 0903.355.104</small></header><div id="toast"></div>
+<header class="site-header"><div class="header-brand"><div>WorkPay – Chấm công &amp; Tính lương</div><small>Thiết kế và Phát triển bởi Nhựt Nguyễn - Contact: 0903.355.104</small></div><button class="support-open" id="supportOpen" type="button" aria-label="Ủng hộ Nhà Phát Triển">☕ Ủng Hộ</button></header><div id="toast"></div>
 <main>
 <section id="cal" class="sec"><div class="card"><div class="row np"><button class="s" id="prev">‹</button><b id="ml"></b><button class="s" id="next">›</button><button class="s" id="cur">Tháng hiện tại</button></div><div class="cal" id="grid"></div><p style="font-size:12px">Xanh lá: đủ công · Cam: đi trễ/về sớm · Xanh dương: nghỉ có lương/lễ · Xám: nghỉ không lương · Ô trắng: chưa chấm công</p><p class="calendar-legend"><span><i class="event-dot lunar"></i>Âm lịch</span><span><i class="event-dot holiday"></i>Ngày lễ</span><span><i class="event-dot event"></i>Sự kiện</span></p></div></section>
 <section id="pay" class="sec" hidden><div class="stats" id="stats"></div><div class="card" style="margin-top:12px"><div class="row np"><b>Chi tiết ngày</b><span><button class="s" id="csv">Xuất CSV</button> <button class="s" onclick="print()">In bảng lương</button></span></div><div class="tw"><table id="tbl"></table></div></div>
@@ -10,6 +10,29 @@
 <section id="bak" class="sec" hidden><div class="card"><b>Sao lưu &amp; phục hồi</b><p>Dữ liệu chỉ lưu trong trình duyệt này (IndexedDB), không đồng bộ thiết bị khác. Hãy xuất JSON định kỳ.</p><button class="p" id="exp">Xuất JSON</button><hr><label>Chế độ nhập<select id="imode"><option value="merge">Hợp nhất (ghi đè bản ghi trùng ID)</option><option value="replace">Thay thế toàn bộ</option></select></label><input type="file" id="imp" accept=".json"><hr><button class="d" id="wipe">Xóa toàn bộ dữ liệu</button></div></section>
 </main>
 <nav><button data-t="cal" class="on">Lịch</button><button data-t="pay">Lương tháng</button><button data-t="year">Thống kê năm</button><button data-t="set">Thiết lập</button><button data-t="bak">Sao lưu</button></nav>
+<dialog id="supportDlg" class="support-dialog" aria-labelledby="supportTitle">
+  <div class="support-heading"><h2 id="supportTitle">☕ Ủng Hộ Nhà Phát Triển</h2><button class="support-close" id="supportClose" type="button" aria-label="Đóng cửa sổ ủng hộ">×</button></div>
+  <p>Nếu bạn yêu thích ứng dụng, bạn có thể ủng hộ Nhà Phát Triển một ly cà phê để tiếp thêm động lực ❤️</p>
+  <p>Nếu có thắc mắc hoặc muốn đóng góp ý kiến để WorkPay ngày càng hoàn thiện, hãy liên hệ qua Zalo: <a href="https://zalo.me/0903355104" target="_blank" rel="noopener noreferrer">0903.355.104</a></p>
+  <div class="support-methods">
+    <article class="support-method">
+      <h3>🏦 Vietcombank</h3>
+      <span class="support-label">Số tài khoản</span>
+      <div class="support-account"><strong>1024455338</strong><button class="support-copy" type="button" data-copy="1024455338" data-copy-label="số tài khoản" aria-label="Sao chép số tài khoản Vietcombank">📋 Sao chép</button></div>
+      <button class="support-qr-toggle" type="button" aria-expanded="false" aria-controls="qrVietcombank">Xem QR</button>
+      <div class="support-qr" id="qrVietcombank" hidden><img src="./assets/qr-vietcombank.png" alt="Mã QR nhận tiền Vietcombank cho tài khoản 1024455338"><button class="support-hide-qr" type="button" data-hide="qrVietcombank">Ẩn QR</button></div>
+    </article>
+    <article class="support-method">
+      <h3>💗 MoMo</h3>
+      <span class="support-label">Số điện thoại</span>
+      <div class="support-account"><strong>0903 355 104</strong><button class="support-copy" type="button" data-copy="0903355104" data-copy-label="số MoMo" aria-label="Sao chép số MoMo">📋 Sao chép</button></div>
+      <button class="support-qr-toggle" type="button" aria-expanded="false" aria-controls="qrMomo">Xem QR</button>
+      <div class="support-qr" id="qrMomo" hidden><img src="./assets/qr-momo.png" alt="Mã QR chuyển tiền MoMo cho số 0903 355 104"><button class="support-hide-qr" type="button" data-hide="qrMomo">Ẩn QR</button></div>
+    </article>
+  </div>
+  <p class="support-payment-note">Bạn tự nhập số tiền trong ứng dụng ngân hàng hoặc MoMo. WorkPay không tự thực hiện giao dịch.</p>
+  <div id="supportToast" class="support-toast" role="status" aria-live="polite" hidden></div>
+</dialog>
 <dialog id="dlg"><b id="dt"></b><section id="calendarInfo" class="calendar-info" aria-live="polite"></section><div class="g"><label>Trạng thái<select id="m_status"><option value="work">Ngày làm việc</option><option value="unpaid">Nghỉ không lương</option><option value="paid">Nghỉ có lương</option><option value="holiday">Nghỉ lễ</option></select></label><label>Ca<select id="m_shiftType"><option value="5-day">Ca 5 tiếng</option><option value="6-day">Ca 6 tiếng</option><option value="8-day">Ca 8 tiếng (ngày)</option><option value="8-night">Ca 8 tiếng (đêm)</option><option value="11-day">Ca 11 tiếng (ngày)</option><option value="11-night">Ca 11 tiếng (đêm)</option><option value="13-day">Ca 13 tiếng (6h-19h)</option></select></label><label><input type="checkbox" id="m_lateEnabled"> Có đi trễ</label><label>Số phút đi trễ<input type="number" min="0" step="1" id="m_lateMinutes" value="0"></label><label><input type="checkbox" id="m_halfDay"> Làm nửa ngày</label><label>Số giờ tăng ca<input type="number" min="0" step="0.25" id="m_overtimeHours" value="0"></label></div>
 <div class="g"><label>Phụ cấp<input type="number" min="0" id="m_allowance"></label><label>Thưởng<input type="number" min="0" id="m_bonus"></label><label>Khấu trừ khác<input type="number" min="0" id="m_otherDeduction"></label><label>Điều chỉnh / tiền nghỉ có lương<input type="number" id="m_adjustment"></label></div><label>Ghi chú<textarea id="m_note" rows="2"></textarea></label><div id="pv"></div>
 <div class="row"><span><button class="p" id="msave">Lưu</button> <button class="s" id="mclose">Đóng</button></span><button class="d" id="mdel">Xóa</button></div></dialog>

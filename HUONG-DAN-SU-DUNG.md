@@ -49,6 +49,13 @@ Mở **Sao lưu**:
 - Chỉ dùng tệp JSON WorkPay đã xuất. Kiểm tra lựa chọn nhập trước khi xác nhận; chế độ thay thế sẽ xóa dữ liệu hiện có trước khi phục hồi.
 - **Xóa toàn bộ dữ liệu** không thể hoàn tác. Hãy xuất và kiểm tra bản sao lưu trước khi dùng.
 
+## 6. Ủng hộ Nhà Phát Triển
+
+- Nhấn **☕ Ủng Hộ** trên thanh đầu trang để xem thông tin Vietcombank, MoMo và liên hệ Zalo.
+- Dùng nút **Sao chép** để sao chép số tài khoản/điện thoại; nhấn **Xem QR** để mở mã QR ngay trong cửa sổ.
+- Có thể thay ảnh QR bằng ảnh đúng tài khoản tại `assets/qr-vietcombank.png` và `assets/qr-momo.png`.
+- Người ủng hộ tự nhập số tiền và chủ động xác nhận chuyển khoản trong ứng dụng ngân hàng hoặc MoMo. WorkPay không thực hiện giao dịch và không lưu dữ liệu ủng hộ vào IndexedDB.
+
 ## Lưu ý quan trọng
 
 - Dữ liệu lưu bằng IndexedDB trong trình duyệt, gắn với hồ sơ trình duyệt và địa chỉ website hiện tại. Dữ liệu không tự đồng bộ sang thiết bị hoặc trình duyệt khác.
