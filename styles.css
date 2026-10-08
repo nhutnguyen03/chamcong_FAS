@@ -65,6 +65,98 @@ header small {
   background: #e2efff;
 }
 
+.pwa-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  min-height: 42px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: #fff;
+  font-size: 12px;
+}
+
+.connection-status {
+  min-width: 0;
+  color: #23613e;
+  overflow-wrap: anywhere;
+}
+
+.connection-status.is-offline {
+  color: #a65b00;
+}
+
+.pwa-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pwa-update-message {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.pwa-action,
+.pwa-later {
+  min-height: 42px;
+  padding: 7px 11px;
+  border-radius: 8px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pwa-action {
+  border: 1px solid #c8dcfa;
+  background: #eef5ff;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.pwa-action:hover {
+  background: #e2efff;
+}
+
+.pwa-later {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-muted);
+}
+
+.pwa-guide-dialog {
+  width: min(440px, calc(100vw - 24px));
+  max-height: min(90vh, 600px);
+  padding: 18px;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px #0003;
+}
+
+.pwa-guide-dialog::backdrop {
+  background: #0006;
+}
+
+.pwa-guide-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pwa-guide-heading h2 {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 19px;
+}
+
+.pwa-guide-dialog ol {
+  padding-left: 24px;
+  line-height: 1.7;
+}
+
 button:focus-visible,
 a:focus-visible {
   outline: 3px solid #77aaf0;
@@ -525,6 +617,23 @@ dialog::backdrop {
     font-size: 10px;
   }
 
+  .pwa-bar {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 7px 12px;
+    font-size: 11px;
+  }
+
+  .pwa-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .pwa-action,
+  .pwa-later {
+    min-height: 42px;
+  }
+
   main {
     padding: 8px;
   }
@@ -609,6 +718,7 @@ dialog::backdrop {
 @media print {
   nav,
   header,
+  .pwa-bar,
   .np,
   #toast {
     display: none !important;

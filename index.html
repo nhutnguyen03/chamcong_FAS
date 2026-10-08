@@ -1,6 +1,20 @@
 <!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WorkPay – Chấm công & Tính lương</title>
+<meta name="theme-color" content="#1d6fd8"><meta name="description" content="WorkPay - Chấm công, theo dõi ngày làm và tính lương ngay trên thiết bị.">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="WorkPay"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="./manifest.json"><link rel="icon" href="./icons/icon-192.png" type="image/png"><link rel="apple-touch-icon" href="./icons/icon-192.png">
 <link rel="stylesheet" href="styles.css"></head><body>
-<header class="site-header"><div class="header-brand"><div>WorkPay – Chấm công &amp; Tính lương</div><small>Thiết kế và Phát triển bởi Nhựt Nguyễn - Contact: 0903.355.104</small></div><button class="support-open" id="supportOpen" type="button" aria-label="Ủng hộ Nhà Phát Triển">☕ Ủng Hộ</button></header><div id="toast"></div>
+<header class="site-header"><div class="header-brand"><div>WorkPay – Chấm công &amp; Tính lương</div><small>Thiết kế và Phát triển bởi Nhựt Nguyễn - Contact: 0903.355.104</small></div><button class="support-open" id="supportOpen" type="button" aria-label="Ủng hộ Nhà Phát Triển">☕ Ủng Hộ</button></header>
+<aside class="pwa-bar" aria-label="Trạng thái và cài đặt WorkPay">
+  <span id="connectionStatus" class="connection-status" role="status" aria-live="polite">🟢 Đang online</span>
+  <div class="pwa-actions">
+    <span id="pwaUpdateMessage" class="pwa-update-message" hidden>🚀 WorkPay đã có phiên bản mới.</span>
+    <button class="pwa-action" id="pwaUpdate" type="button" aria-label="Cập nhật WorkPay" hidden>Cập nhật</button>
+    <button class="pwa-action" id="pwaInstall" type="button" aria-label="Cài đặt WorkPay" hidden>📱 Cài đặt WorkPay</button>
+    <button class="pwa-action" id="pwaIosInstall" type="button" aria-label="Hướng dẫn cài WorkPay trên iPhone" hidden>📱 Cài WorkPay trên iPhone</button>
+    <button class="pwa-later" id="pwaInstallLater" type="button" hidden>Để sau</button>
+  </div>
+</aside>
+<div id="toast"></div>
 <main>
 <section id="cal" class="sec"><div class="card"><div class="row np"><button class="s" id="prev">‹</button><b id="ml"></b><button class="s" id="next">›</button><button class="s" id="cur">Tháng hiện tại</button></div><div class="cal" id="grid"></div><p style="font-size:12px">Xanh lá: đủ công · Cam: đi trễ/về sớm · Xanh dương: nghỉ có lương/lễ · Xám: nghỉ không lương · Ô trắng: chưa chấm công</p><p class="calendar-legend"><span><i class="event-dot lunar"></i>Âm lịch</span><span><i class="event-dot holiday"></i>Ngày lễ</span><span><i class="event-dot event"></i>Sự kiện</span></p></div></section>
 <section id="pay" class="sec" hidden><div class="stats" id="stats"></div><div class="card" style="margin-top:12px"><div class="row np"><b>Chi tiết ngày</b><span><button class="s" id="csv">Xuất CSV</button> <button class="s" onclick="print()">In bảng lương</button></span></div><div class="tw"><table id="tbl"></table></div></div>
@@ -32,6 +46,10 @@
   </div>
   <p class="support-payment-note">Bạn tự nhập số tiền trong ứng dụng ngân hàng hoặc MoMo. WorkPay không tự thực hiện giao dịch.</p>
   <div id="supportToast" class="support-toast" role="status" aria-live="polite" hidden></div>
+</dialog>
+<dialog id="pwaIosGuide" class="pwa-guide-dialog" aria-labelledby="pwaIosTitle">
+  <div class="pwa-guide-heading"><h2 id="pwaIosTitle">📱 Cài WorkPay trên iPhone</h2><button class="support-close" id="pwaIosClose" type="button" aria-label="Đóng hướng dẫn cài đặt">×</button></div>
+  <ol><li>Nhấn nút <strong>Chia sẻ</strong> trên Safari.</li><li>Chọn <strong>Thêm vào Màn hình chính</strong>.</li><li>Nhấn <strong>Thêm</strong> để hoàn tất.</li></ol>
 </dialog>
 <dialog id="dlg"><b id="dt"></b><section id="calendarInfo" class="calendar-info" aria-live="polite"></section><div class="g"><label>Trạng thái<select id="m_status"><option value="work">Ngày làm việc</option><option value="unpaid">Nghỉ không lương</option><option value="paid">Nghỉ có lương</option><option value="holiday">Nghỉ lễ</option></select></label><label>Ca<select id="m_shiftType"><option value="5-day">Ca 5 tiếng</option><option value="6-day">Ca 6 tiếng</option><option value="8-day">Ca 8 tiếng (ngày)</option><option value="8-night">Ca 8 tiếng (đêm)</option><option value="11-day">Ca 11 tiếng (ngày)</option><option value="11-night">Ca 11 tiếng (đêm)</option><option value="13-day">Ca 13 tiếng (6h-19h)</option></select></label><label><input type="checkbox" id="m_lateEnabled"> Có đi trễ</label><label>Số phút đi trễ<input type="number" min="0" step="1" id="m_lateMinutes" value="0"></label><label><input type="checkbox" id="m_halfDay"> Làm nửa ngày</label><label>Số giờ tăng ca<input type="number" min="0" step="0.25" id="m_overtimeHours" value="0"></label></div>
 <div class="g"><label>Phụ cấp<input type="number" min="0" id="m_allowance"></label><label>Thưởng<input type="number" min="0" id="m_bonus"></label><label>Khấu trừ khác<input type="number" min="0" id="m_otherDeduction"></label><label>Điều chỉnh / tiền nghỉ có lương<input type="number" id="m_adjustment"></label></div><label>Ghi chú<textarea id="m_note" rows="2"></textarea></label><div id="pv"></div>

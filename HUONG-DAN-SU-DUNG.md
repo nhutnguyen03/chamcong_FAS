@@ -53,8 +53,16 @@ Mở **Sao lưu**:
 
 - Nhấn **☕ Ủng Hộ** trên thanh đầu trang để xem thông tin Vietcombank, MoMo và liên hệ Zalo.
 - Dùng nút **Sao chép** để sao chép số tài khoản/điện thoại; nhấn **Xem QR** để mở mã QR ngay trong cửa sổ.
-- Có thể thay ảnh QR bằng ảnh đúng tài khoản tại `assets/qr-vietcombank.png` và `assets/qr-momo.png`.
+- Có thể thay ảnh QR bằng ảnh đúng tài khoản tại `public/assets/qr-vietcombank.png` và `public/assets/qr-momo.png`.
 - Người ủng hộ tự nhập số tiền và chủ động xác nhận chuyển khoản trong ứng dụng ngân hàng hoặc MoMo. WorkPay không thực hiện giao dịch và không lưu dữ liệu ủng hộ vào IndexedDB.
+
+## 7. Cài đặt và dùng WorkPay ngoại tuyến
+
+- Mở WorkPay bằng Chrome/Edge tương thích rồi nhấn **📱 Cài đặt WorkPay** khi nút được hiển thị. Chấp nhận lời nhắc của trình duyệt để thêm ứng dụng vào màn hình chính.
+- Trên iPhone/iPad, mở website bằng Safari, nhấn **📱 Cài WorkPay trên iPhone**, rồi làm theo hướng dẫn **Chia sẻ → Thêm vào Màn hình chính → Thêm**.
+- Mở WorkPay khi có mạng ít nhất một lần để Service Worker lưu bộ vỏ ứng dụng và các tài nguyên tĩnh cần thiết trên thiết bị. Lần truy cập ngoại tuyến sau đó vẫn sử dụng được các chức năng chính.
+- WorkPay tiếp tục lưu chấm công, thiết lập và khoản đã nhận trong IndexedDB hiện tại trên thiết bị. Cập nhật ứng dụng chỉ thay cache tệp tĩnh, không xóa hoặc thay đổi cơ sở dữ liệu.
+- Nếu có bản cập nhật đang chờ, dùng nút **Cập nhật** trong WorkPay để tải bản mới. Export/Restore JSON và CSV tiếp tục xử lý trên thiết bị, không tải dữ liệu lên máy chủ.
 
 ## Lưu ý quan trọng
 

@@ -8,6 +8,114 @@ const st=(s,m='readonly')=>db.transaction(s,m).objectStore(s);
 const all=s=>rq(st(s).getAll()),put=(s,o)=>rq(st(s,'readwrite').put(o)),del=(s,id)=>rq(st(s,'readwrite').delete(id));
 const bulk=(data,clear)=>{const t=db.transaction(N,'readwrite');N.forEach(n=>{const o=t.objectStore(n);if(clear)o.clear();(data[n]||[]).forEach(x=>o.put(x))});return new Promise((ok,ko)=>{t.oncomplete=ok;t.onerror=t.onabort=()=>ko(t.error)})};
 const DEF={id:'default',payMode:'daily',dailyRate:255000,dailyRate13:450000,dailyRate6:null,dailyRate11Day:null,dailyRateNight8:309500,dailyRateNight11:426500,dailyRateSunday13:832000,dailyRateSundayNight11:758500,attendanceBonus:250000,hourlyRate:35000,overtimeRate:39000,stdH:8,breakMin:60,interval:30,sched:'08:00:00',lateEnabled:true,shortRule:'prorate'};
+const connectionStatus=$('#connectionStatus');
+const pwaInstall=$('#pwaInstall'),pwaIosInstall=$('#pwaIosInstall'),pwaInstallLater=$('#pwaInstallLater');
+const pwaUpdate=$('#pwaUpdate'),pwaUpdateMessage=$('#pwaUpdateMessage');
+const pwaIosGuide=$('#pwaIosGuide');
+let deferredInstallPrompt=null,pwaRegistration=null,reloadAfterUpdate=false,pwaListenersAttached=false;
+let previousOnlineState=navigator.onLine,connectionMessageTimer,installDismissedThisSession=false;
+try{installDismissedThisSession=sessionStorage.getItem('workpay-install-dismissed')==='1'}catch(error){console.warn('Không thể đọc trạng thái nhắc cài WorkPay:',error)}
+const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const isIosSafari=()=>{
+  const ua=navigator.userAgent;
+  const ios=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  return ios&&/Safari/i.test(ua)&&!/(CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo)/i.test(ua);
+};
+function updateInstallButtons(){
+  const canInstall=!isStandalone()&&!installDismissedThisSession;
+  pwaInstall.hidden=!(canInstall&&deferredInstallPrompt);
+  pwaIosInstall.hidden=!(canInstall&&!deferredInstallPrompt&&isIosSafari());
+  pwaInstallLater.hidden=!(pwaInstall.hidden===false||pwaIosInstall.hidden===false);
+}
+function setConnectionStatus(online,reconnected=false){
+  clearTimeout(connectionMessageTimer);
+  connectionStatus.textContent=online?(reconnected?'✅ Đã kết nối Internet':'🟢 Đang online'):'🟠 Bạn đang offline - dữ liệu vẫn được lưu trên thiết bị.';
+  connectionStatus.classList.toggle('is-offline',!online);
+  if(online&&reconnected)connectionMessageTimer=setTimeout(()=>{connectionStatus.textContent='🟢 Đang online'},3000);
+}
+window.addEventListener('offline',()=>{
+  if(previousOnlineState===false)return;
+  previousOnlineState=false;
+  setConnectionStatus(false);
+});
+window.addEventListener('online',()=>{
+  if(previousOnlineState===true)return;
+  previousOnlineState=true;
+  setConnectionStatus(true,true);
+  pwaRegistration?.update().catch(error=>console.warn('Không thể kiểm tra cập nhật WorkPay:',error));
+});
+setConnectionStatus(navigator.onLine);
+window.addEventListener('beforeinstallprompt',event=>{
+  event.preventDefault();
+  deferredInstallPrompt=event;
+  updateInstallButtons();
+});
+window.addEventListener('appinstalled',()=>{
+  deferredInstallPrompt=null;
+  installDismissedThisSession=true;
+  updateInstallButtons();
+});
+pwaInstall.addEventListener('click',async()=>{
+  if(!deferredInstallPrompt)return;
+  const prompt=deferredInstallPrompt;
+  deferredInstallPrompt=null;
+  updateInstallButtons();
+  try{
+    await prompt.prompt();
+    await prompt.userChoice;
+  }catch(error){
+    console.warn('Không thể mở lời nhắc cài WorkPay:',error);
+  }finally{
+    updateInstallButtons();
+  }
+});
+pwaIosInstall.addEventListener('click',()=>pwaIosGuide.showModal());
+$('#pwaIosClose').addEventListener('click',()=>pwaIosGuide.close());
+pwaIosGuide.addEventListener('click',event=>{if(event.target===pwaIosGuide)pwaIosGuide.close()});
+pwaInstallLater.addEventListener('click',()=>{
+  installDismissedThisSession=true;
+  try{sessionStorage.setItem('workpay-install-dismissed','1')}catch(error){console.warn('Không thể lưu trạng thái nhắc cài WorkPay:',error)}
+  updateInstallButtons();
+});
+pwaUpdate.addEventListener('click',()=>{
+  const waitingWorker=pwaRegistration?.waiting;
+  if(!waitingWorker)return;
+  reloadAfterUpdate=true;
+  waitingWorker.postMessage({type:'SKIP_WAITING'});
+});
+function showPwaUpdateIfReady(){
+  const updateReady=Boolean(pwaRegistration?.waiting&&navigator.serviceWorker.controller);
+  pwaUpdate.hidden=!updateReady;
+  pwaUpdateMessage.hidden=!updateReady;
+}
+async function registerPwa(){
+  if(!('serviceWorker'in navigator))return;
+  try{
+    const workerUrl=new URL('./service-worker.js',document.baseURI);
+    const existingRegistration=await navigator.serviceWorker.getRegistration(document.baseURI);
+    pwaRegistration=existingRegistration||await navigator.serviceWorker.register(workerUrl);
+    if(!pwaListenersAttached){
+      pwaListenersAttached=true;
+      navigator.serviceWorker.addEventListener('controllerchange',()=>{
+        if(reloadAfterUpdate)location.reload();
+        showPwaUpdateIfReady();
+      });
+      pwaRegistration.addEventListener('updatefound',()=>{
+        const worker=pwaRegistration.installing;
+        if(!worker)return;
+        worker.addEventListener('statechange',showPwaUpdateIfReady);
+      });
+    }
+    showPwaUpdateIfReady();
+    if(navigator.onLine){
+      try{await pwaRegistration.update()}catch(error){console.warn('Không thể kiểm tra cập nhật WorkPay:',error)}
+    }
+  }catch(error){
+    console.warn('Không thể đăng ký Service Worker WorkPay:',error);
+  }
+}
+window.addEventListener('load',registerPwa,{once:true});
+if(document.readyState==='complete')registerPwa();
 const OPTIONAL_RATES=new Set(['dailyRate6','dailyRate11Day']);
 const NUM=[['dailyRate','Lương ngày ca 8 tiếng (ngày)'],['dailyRate13','Lương ngày ca 13 tiếng (6h-19h)'],['dailyRate6','Lương ca 6 tiếng (để trống = tính theo giờ)'],['dailyRate11Day','Lương ca 11 tiếng ban ngày (để trống = tính theo giờ)'],['dailyRateNight8','Lương đêm ca 8 tiếng'],['dailyRateNight11','Lương đêm ca 11 tiếng (19h-6h)'],['dailyRateSunday13','Chủ nhật ca ngày 13 tiếng'],['dailyRateSundayNight11','Chủ nhật ca đêm 11 tiếng'],['attendanceBonus','Chuyên cần (đủ 26 công/tháng)'],['hourlyRate','Lương giờ'],['overtimeRate','Tăng ca/giờ'],['stdH','Giờ công tiêu chuẩn'],['breakMin','Nghỉ (phút)'],['interval','Mốc đi trễ (phút)']];
 const hourOptions=Array.from({length:24},(_,i)=>`<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`).join('');
@@ -20,6 +128,7 @@ const keys=['payMode','sched','shortRule'];
 const get=p=>({...Object.fromEntries(keys.map(k=>[k,k==='sched'?readTime(p+k):$('#'+p+k).value])),...Object.fromEntries(NUM.map(([k])=>[k,OPTIONAL_RATES.has(k)&&!$('#'+p+k).value.trim()?null:+$('#'+p+k).value])),lateEnabled:$('#'+p+'lateEnabled').checked});
 const fill=(p,o)=>{keys.forEach(k=>k==='sched'?setTime(p+k,o[k]):$('#'+p+k).value=o[k]);NUM.forEach(([k])=>$('#'+p+k).value=o[k]??'');$('#'+p+'lateEnabled').checked=o.lateEnabled};
 $('#sf').innerHTML=fields('s_');
+updateInstallButtons();
 const supportDialog=$('#supportDlg'),supportToast=$('#supportToast');
 let supportToastTimer;
 const showSupportToast=message=>{supportToast.textContent=message;supportToast.hidden=false;clearTimeout(supportToastTimer);supportToastTimer=setTimeout(()=>{supportToast.hidden=true},2000)};
