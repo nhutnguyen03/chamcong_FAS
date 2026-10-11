@@ -9,7 +9,7 @@
   "display": "standalone",
   "display_override": ["standalone"],
   "orientation": "portrait",
-  "theme_color": "#1d6fd8",
+  "theme_color": "#1d4ed8",
   "background_color": "#f4f6f9",
   "categories": ["finance", "productivity", "utilities"],
   "icons": [
