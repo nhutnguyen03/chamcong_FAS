@@ -709,6 +709,16 @@ dialog::backdrop {
   margin-top: 5px;
 }
 
+.overtime-field {
+  margin: 6px 0;
+  font-size: 13px;
+}
+
+.overtime-label {
+  display: block;
+  margin-bottom: 5px;
+}
+
 .overtime-choice {
   min-height: 38px;
   padding: 6px 4px;

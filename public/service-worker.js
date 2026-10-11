@@ -1,6 +1,6 @@
 const CACHE_PREFIX = 'workpay-static-';
 // Bump this name whenever a new offline app shell is released.
-const CACHE_NAME = `${CACHE_PREFIX}v8`;
+const CACHE_NAME = `${CACHE_PREFIX}v9`;
 const MAX_RUNTIME_ENTRIES = 80;
 const APP_SHELL_URL = new URL('./', self.registration.scope);
 
