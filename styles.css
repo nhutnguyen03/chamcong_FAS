@@ -1325,6 +1325,16 @@ nav button.on {
   background: #f6f8fc;
 }
 
+.payments-card .g > label {
+  min-width: 0;
+}
+
+.payments-card input,
+.payments-card select {
+  min-width: 0;
+  height: 44px;
+}
+
 .annual-chart {
   min-height: 140px;
   overflow-x: auto;
@@ -1604,7 +1614,7 @@ nav button.on {
 
 @media (max-width: 700px) {
   body {
-    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
   }
 
   .site-header {
@@ -1749,6 +1759,10 @@ nav button.on {
   .income-stats > div {
     padding: 10px;
     border-radius: 12px;
+  }
+
+  .payments-card .g {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .settings-fields {
