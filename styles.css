@@ -1263,6 +1263,16 @@ nav button.on {
   box-shadow: none;
 }
 
+.payroll-month-settings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px 20px;
+}
+
+.monthly-payroll-option {
+  min-width: 0;
+}
+
 .payroll-deduction label {
   min-height: 42px;
   flex-wrap: wrap;
@@ -1271,6 +1281,30 @@ nav button.on {
 .payroll-deduction input {
   width: 19px;
   height: 19px;
+}
+
+.monthly-bonus-input {
+  display: grid;
+  grid-template-columns: auto minmax(100px, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.monthly-bonus-input label {
+  min-height: 0;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+.monthly-bonus-input input {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid #cbd6e5;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
 }
 
 .payroll-stats {

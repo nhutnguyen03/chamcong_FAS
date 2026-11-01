@@ -27,10 +27,10 @@ Lịch đánh dấu riêng Chủ nhật, ngày hiện tại, ngày đang chọn,
 
 ## 2. Xem lương và khoản đã nhận
 
-- Đầu mục **Lương tháng** có **Tổng quan thu nhập** với bộ chọn tháng riêng; các nút tháng trước/sau và **Tháng này** đổi tháng đang xem. Thẻ tổng quan hiển thị lương ước tính sau chuyên cần và BHXH, tiền đã nhận, công quy đổi, tăng ca và mức ước tính trung bình trên mỗi công.
+- Đầu mục **Lương tháng** có **Tổng quan thu nhập** với bộ chọn tháng riêng; các nút tháng trước/sau và **Tháng này** đổi tháng đang xem. Thẻ tổng quan hiển thị lương ước tính sau các khoản tháng và BHXH, tiền đã nhận, công quy đổi, tăng ca và mức ước tính trung bình trên mỗi công.
 - Phần so sánh nêu chênh lệch lương ước tính và tiền đã nhận so với tháng trước; tỷ lệ phần trăm không được tính khi tháng trước bằng 0 hoặc thiếu dữ liệu. Tháng hiện tại được ghi rõ là chưa kết thúc. Có thể mở **Phân tích thành phần lương** để xem các khoản lưu trong chấm công và **Điều gì thay đổi giữa hai tháng?** để xem chênh lệch công, ca và thành phần đã ghi nhận; đây là so sánh số liệu, không khẳng định nguyên nhân.
 - Biểu đồ cho phép chọn 6 tháng, 12 tháng hoặc năm đang chọn trong **Thống kê năm**; chỉ số gồm lương ước tính, tiền đã nhận, ngày công quy đổi và giờ tăng ca. Tháng không có dữ liệu cho chỉ số đang chọn được đánh dấu riêng, không coi là tháng có giá trị 0.
-- Mục **Lương tháng** vẫn hiển thị tổng lương dự kiến, tiền đã nhận, chênh lệch, công, giờ làm, giờ tăng ca và các khoản khấu trừ. Tùy chọn **Trừ BHXH tháng này** mặc định không được chọn; khi chọn, số tiền BHXH trong Thiết lập sẽ được trừ riêng cho tháng đó.
+- Mục **Lương tháng** vẫn hiển thị tổng lương dự kiến, tiền đã nhận, chênh lệch, công, giờ làm, giờ tăng ca và các khoản khấu trừ. Bật **Cộng chuyên cần tháng này** để cộng mức chuyên cần trong Thiết lập; khoản này không còn phụ thuộc vào số công. Có thể nhập **Số tiền thưởng** rồi bật **Cộng thưởng tháng này**. Tùy chọn **Trừ BHXH tháng này** mặc định không được chọn. Các lựa chọn và số tiền thưởng được lưu riêng cho từng tháng.
 - Bảng chi tiết ngày cho biết ca, tiền ca và tổng tiền; bấm vào một dòng để mở ngày chấm công đó.
 - Trong phần **Tiền thực nhận**, nhập ngày nhận, số tiền, loại khoản và ghi chú, rồi bấm **Thêm khoản**. Số tiền âm dùng để ghi nhận khoản hoàn trả.
 - Dùng **Xuất CSV** để tải chi tiết tháng hoặc **In bảng lương** để in.
@@ -48,7 +48,7 @@ Mở **Thiết lập** để xem hoặc thay đổi mức lương, số tiền B
 - Đơn giá ca 5 tiếng, ca 6 tiếng và ca 11 tiếng ban ngày để trống ban đầu. Khi dùng phương thức lương ngày, các ca này tính theo **Lương giờ × số giờ ca** cho đến khi nhập đơn giá riêng.
 - Khi chấm công ngày Chủ nhật, ứng dụng nhận diện ngày theo lịch và chỉ đưa ra **ca ngày 13 tiếng** hoặc **ca đêm 11 tiếng**, đồng thời hiển thị đơn giá Chủ nhật đã thiết lập ngay trong danh sách ca. Nếu bản ghi Chủ nhật cũ dùng loại ca khác, cần chọn một trong hai ca Chủ nhật trước khi lưu.
 - Nếu chọn phương thức **Lương giờ**, tiền ca được tính theo số giờ ca nhân với Lương giờ.
-- Mức chuyên cần mặc định là **250.000đ** khi đạt ít nhất **26 công quy đổi** trong tháng. Ngày làm đủ tính 1 công, ngày làm nửa ngày tính 0,5 công; trạng thái nghỉ không tính công.
+- Mức chuyên cần mặc định là **250.000đ**. Chuyên cần được bật/tắt riêng trong mục **Lương tháng**, không tự động phụ thuộc vào 26 công. Ngày làm đủ tính 1 công, ngày làm nửa ngày tính 0,5 công; trạng thái nghỉ không tính công.
 - Mức trừ BHXH mặc định là **557.550đ/tháng**. Việc trừ BHXH phải được bật riêng tại **Lương tháng** cho từng tháng; khi bỏ chọn, tháng đó không bị trừ. Thay đổi mức BHXH trong Thiết lập sẽ cập nhật lương dự kiến của các tháng đã bật khoản trừ này.
 - Ca Chủ nhật được xác định theo ngày dương lịch rơi vào Chủ nhật.
 - Thiết lập này không tự sửa các bản ghi đã có. Hãy kiểm tra phần xem trước khi lưu chấm công, nhất là sau khi thay đổi mức lương.

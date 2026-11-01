@@ -1,4 +1,4 @@
-import {calc,countWorkCredits,calculateAttendanceBonus} from './calculations.js';
+import {calc,countWorkCredits} from './calculations.js';
 import {getCalendarDayInfo} from './calendar.js';
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const N=['attendance','payments','settings'];
@@ -117,7 +117,7 @@ async function registerPwa(){
 window.addEventListener('load',registerPwa,{once:true});
 if(document.readyState==='complete')registerPwa();
 const OPTIONAL_RATES=new Set(['dailyRate6','dailyRate11Day']);
-const NUM=[['dailyRate','Lương ngày ca 8 tiếng (ngày)'],['dailyRate13','Lương ngày ca 13 tiếng (6h-19h)'],['dailyRate6','Lương ca 6 tiếng (để trống = tính theo giờ)'],['dailyRate11Day','Lương ca 11 tiếng ban ngày (để trống = tính theo giờ)'],['dailyRateNight8','Lương đêm ca 8 tiếng'],['dailyRateNight11','Lương đêm ca 11 tiếng (19h-6h)'],['dailyRateSunday13','Chủ nhật ca ngày 13 tiếng'],['dailyRateSundayNight11','Chủ nhật ca đêm 11 tiếng'],['attendanceBonus','Chuyên cần (đủ 26 công/tháng)'],['bhxhAmount','BHXH mỗi tháng'],['hourlyRate','Lương giờ'],['overtimeRate','Tăng ca/giờ'],['stdH','Giờ công tiêu chuẩn'],['breakMin','Nghỉ (phút)'],['interval','Mốc đi trễ (phút)']];
+const NUM=[['dailyRate','Lương ngày ca 8 tiếng (ngày)'],['dailyRate13','Lương ngày ca 13 tiếng (6h-19h)'],['dailyRate6','Lương ca 6 tiếng (để trống = tính theo giờ)'],['dailyRate11Day','Lương ca 11 tiếng ban ngày (để trống = tính theo giờ)'],['dailyRateNight8','Lương đêm ca 8 tiếng'],['dailyRateNight11','Lương đêm ca 11 tiếng (19h-6h)'],['dailyRateSunday13','Chủ nhật ca ngày 13 tiếng'],['dailyRateSundayNight11','Chủ nhật ca đêm 11 tiếng'],['attendanceBonus','Mức chuyên cần'],['bhxhAmount','BHXH mỗi tháng'],['hourlyRate','Lương giờ'],['overtimeRate','Tăng ca/giờ'],['stdH','Giờ công tiêu chuẩn'],['breakMin','Nghỉ (phút)'],['interval','Mốc đi trễ (phút)']];
 const SETTING_GROUPS=[
   {title:'Mức lương theo ca',keys:['dailyRate','dailyRate13','dailyRate6','dailyRate11Day','dailyRateNight8','dailyRateNight11','dailyRateSunday13','dailyRateSundayNight11']},
   {title:'Phụ cấp và các khoản cố định',keys:['attendanceBonus','bhxhAmount','hourlyRate','overtimeRate']},
@@ -209,20 +209,42 @@ const toast=(m)=>{const t=$('#toast');t.textContent=m;t.style.display='block';se
 async function load(){recs=await all('attendance');pays=await all('payments');const settings=await all('settings');S={...DEF,...(settings.find(x=>x.id==='default')||{})};monthlySettings=new Map(settings.filter(x=>x.id.startsWith('payroll:')).map(x=>[x.id,x]));render()}
 const monthRecs=()=>recs.filter(r=>r.workDate.startsWith(ym)).sort((a,b)=>a.workDate<b.workDate?-1:1);
 const equivalentWorkDays=countWorkCredits;
-const attendanceBonusFor=records=>calculateAttendanceBonus(records,S.attendanceBonus);
-const bhxhEnabledFor=month=>monthlySettings.get(`payroll:${month}`)?.bhxhEnabled===true;
-const bhxhFor=month=>monthlySettings.get(`payroll:${month}`)?.bhxhEnabled?Number(S.bhxhAmount)||0:0;
+const payrollSettingsFor=month=>monthlySettings.get(`payroll:${month}`)||{};
+const attendanceBonusFor=month=>payrollSettingsFor(month).attendanceBonusEnabled?(Number(S.attendanceBonus)||0):0;
+const monthlyBonusFor=month=>payrollSettingsFor(month).bonusEnabled?(Number(payrollSettingsFor(month).bonusAmount)||0):0;
+const bhxhEnabledFor=month=>payrollSettingsFor(month).bhxhEnabled===true;
+const bhxhFor=month=>bhxhEnabledFor(month)?Number(S.bhxhAmount)||0:0;
+async function savePayrollSetting(key,value,errorLabel){
+  const id=`payroll:${ym}`,previous=monthlySettings.get(id),setting={...payrollSettingsFor(ym),id,[key]:value};
+  monthlySettings.set(setting.id,setting);
+  try{
+    await put('settings',setting);
+    renderPay();
+    renderYear();
+  }catch(error){
+    if(monthlySettings.get(id)===setting){
+      if(previous)monthlySettings.set(id,previous);
+      else monthlySettings.delete(id);
+    }
+    renderPay();
+    toast(`Lỗi lưu ${errorLabel}: ${error.message}`);
+  }
+}
 function render(){renderQuickAttendance();renderCal();renderPay();renderYear();fill('s_',S);conv()}
 function renderQuickAttendance(){const record=recs.find(item=>item.workDate===today);$('#quickAttendanceDate').textContent=formatDate(today);$('#quickAttendanceStatus').textContent=record?`${record.status==='work'?'Đã chấm công':record.status==='unpaid'?'Đã ghi nhận nghỉ không lương':record.status==='paid'?'Đã ghi nhận nghỉ có lương':'Đã ghi nhận nghỉ lễ'}${record.shiftType?` · ${shiftLabel(record.shiftType,record.shiftHours)}`:''} · ${money(record.expectedTotal)}`:'Chưa có chấm công hôm nay';$('#quickAttendanceButton').textContent=record?'Sửa chấm công':'Chấm công hôm nay'}
 function renderCal(){const[y,m]=ym.split('-').map(Number);$('#ml').textContent=`Tháng ${m}/${y}`;const first=new Date(Date.UTC(y,m-1,1)),off=(first.getUTCDay()+6)%7;let h=['T2','T3','T4','T5','T6','T7','CN'].map(d=>`<div class=h>${d}</div>`).join('');
 for(let i=0;i<42;i++){const d=new Date(Date.UTC(y,m-1,1-off+i)),ds=d.toISOString().slice(0,10),r=recs.find(x=>x.workDate===ds),events=getCalendarDayInfo(ds).events,types=[...new Set(events.map(event=>event.type))],isSunday=d.getUTCDay()===0,dayEvents=events.map(event=>event.title).join(' · ');const cls=['day',d.getUTCMonth()!==m-1&&'o',ds===today&&'t',ds===cur&&'selected',isSunday&&'sunday',r&&(r.status==='work'?(r.lateIntervals||r.earlyIntervals?'l':'w'):r.status==='unpaid'?'u':'v'),r?.note&&'has-note'].filter(Boolean).join(' '),accessibleLabel=[formatDate(ds),isSunday?'Chủ nhật':'',r?.status==='work'?'Đã chấm công':r?'Đã ghi nhận ngày nghỉ':'Chưa chấm công',r?.note?'Có ghi chú':'',dayEvents].filter(Boolean).join('. ');
 h+=`<button type="button" class="${cls}" data-d="${ds}" aria-label="${esc(accessibleLabel)}" aria-pressed="${ds===cur}" title="${esc(dayEvents)}"><span class="day-top"><b>${d.getUTCDate()}</b><span class="event-dots" aria-hidden="true">${types.map(type=>`<i class="event-dot ${type}"></i>`).join('')}</span></span>${r?`<span>${r.status==='work'?hr(r.totalSec)+'h':'nghỉ'}</span><span>${money(r.expectedTotal)}${r.lateIntervals||r.earlyIntervals?' ⏰':''}</span>`:''}</button>`}
 $('#grid').innerHTML=h}
-function renderPay(){const R=monthRecs(),sum=k=>R.reduce((a,r)=>a+(r[k]||0),0),attendanceBonus=attendanceBonusFor(R),bhxh=bhxhFor(ym),exp=sum('expectedTotal')+attendanceBonus-bhxh,P=pays.filter(p=>p.payrollMonth===ym),got=P.reduce((a,p)=>a+p.amount,0),diff=got-exp;
+function renderPay(){const R=monthRecs(),sum=k=>R.reduce((a,r)=>a+(r[k]||0),0),attendanceBonus=attendanceBonusFor(ym),bonus=monthlyBonusFor(ym),bhxh=bhxhFor(ym),exp=sum('expectedTotal')+attendanceBonus+bonus-bhxh,P=pays.filter(p=>p.payrollMonth===ym),got=P.reduce((a,p)=>a+p.amount,0),diff=got-exp;
 const msg=diff<0?'Tiền thực nhận thấp hơn lương dự kiến':diff>0?'Tiền thực nhận cao hơn lương dự kiến':'Đã khớp';
+$('#attendanceBonusEnabled').checked=payrollSettingsFor(ym).attendanceBonusEnabled===true;
+$('#bonusEnabled').checked=payrollSettingsFor(ym).bonusEnabled===true;
+$('#bonusAmount').value=payrollSettingsFor(ym).bonusAmount??'';
 $('#bhxhEnabled').checked=bhxhEnabledFor(ym);
+$('#attendanceBonusAmountLabel').textContent=money(S.attendanceBonus);
 $('#bhxhAmountLabel').textContent=money(S.bhxhAmount);
-$('#stats').innerHTML=[['Lương dự kiến',money(exp)],['Chuyên cần',money(attendanceBonus)],['Trừ BHXH',money(bhxh)],['Thực nhận',money(got)],['Chênh lệch',money(diff)+' – '+msg],['Số công quy đổi',equivalentWorkDays(R)],['Giờ làm',hr(sum('totalSec'))],['Giờ thường',hr(sum('regularSec'))],['Giờ tăng ca',hr(sum('overtimeSec'))],['Tiền tăng ca',money(sum('overtimePay'))],['Khấu trừ trễ/về sớm',money(sum('latePenalty')+sum('earlyPenalty'))+' ('+Math.round(sum('latePenaltyMinutes')+sum('earlyPenaltyMinutes'))+' phút)']].map(([a,b])=>`<div>${a}<b>${b}</b></div>`).join('');
+$('#stats').innerHTML=[['Lương dự kiến',money(exp)],['Chuyên cần',money(attendanceBonus)],['Thưởng tháng',money(bonus)],['Trừ BHXH',money(bhxh)],['Thực nhận',money(got)],['Chênh lệch',money(diff)+' – '+msg],['Số công quy đổi',equivalentWorkDays(R)],['Giờ làm',hr(sum('totalSec'))],['Giờ thường',hr(sum('regularSec'))],['Giờ tăng ca',hr(sum('overtimeSec'))],['Tiền tăng ca',money(sum('overtimePay'))],['Khấu trừ trễ/về sớm',money(sum('latePenalty')+sum('earlyPenalty'))+' ('+Math.round(sum('latePenaltyMinutes')+sum('earlyPenaltyMinutes'))+' phút)']].map(([a,b])=>`<div>${a}<b>${b}</b></div>`).join('');
 $('#tbl').innerHTML='<tr><th>Ngày<th>Ca<th>Công<th>Trễ(phút)<th>Mốc trễ<th>Về sớm(phút)<th>TC(giờ)<th>Lương ca<th>Tiền TC<th>Trừ trễ<th>Trừ sớm<th>Tổng</tr>'+R.map(r=>{const shift=r.shiftHours?shiftLabel(r.shiftType||(r.shiftHours===13?'13-day':'8-day'),r.shiftHours):r.start?`${r.start}–${r.end||''}`:'—',work=r.halfDay?'Nửa ngày':r.shiftHours?'Đủ ca':'—',late=r.lateMinutes??Math.round((r.lateSec||0)/60),early=Math.round((r.earlySec||0)/60),ot=r.overtimeHours??((r.overtimeSec||0)/3600);return`<tr data-d="${r.workDate}"><td>${formatDate(r.workDate)}<td>${shift}<td>${work}<td>${late}<td>${r.lateIntervals||0}<td>${early}<td>${(+ot).toFixed(2)}<td>${money(r.basePay)}<td>${money(r.overtimePay)}<td>${money(r.latePenalty)}<td>${money(r.earlyPenalty)}<td>${money(r.expectedTotal)}</tr>`}).join('');
 $('#ptbl').innerHTML=P.map(p=>`<tr><td>${formatDate(p.paymentDate)}<td>${esc(p.type)} ${esc(p.note)}<td>${money(p.amount)}<td><button class="d np" data-pd="${p.id}">Xóa</button></tr>`).join('')||'<tr><td>Chưa có khoản nào</tr>';
 renderIncomeDashboard()}
@@ -233,8 +255,8 @@ const monthOffset=(key,offset)=>{const[y,m]=key.split('-').map(Number);return ne
 function incomeMonthStats(key){
   const records=recs.filter(record=>typeof record.workDate==='string'&&record.workDate.startsWith(key));
   const payments=pays.filter(payment=>payment.payrollMonth===key);
-  const bonus=attendanceBonusFor(records),bhxh=bhxhFor(key);
-  return{key,records,payments,credits:equivalentWorkDays(records),hours:sumField(records,'totalSec')/3600,overtime:sumField(records,'overtimeSec')/3600,expected:sumField(records,'expectedTotal')+bonus-bhxh,received:payments.reduce((total,payment)=>total+safeNumber(payment.amount),0),bonus,bhxh};
+  const attendanceBonus=attendanceBonusFor(key),bonus=monthlyBonusFor(key),bhxh=bhxhFor(key);
+  return{key,records,payments,credits:equivalentWorkDays(records),hours:sumField(records,'totalSec')/3600,overtime:sumField(records,'overtimeSec')/3600,expected:sumField(records,'expectedTotal')+attendanceBonus+bonus-bhxh,received:payments.reduce((total,payment)=>total+safeNumber(payment.amount),0),attendanceBonus,bonus,bhxh};
 }
 function signedMoney(value){return`${value>0?'+':''}${money(value)}`}
 function renderIncomeDashboard(){
@@ -244,7 +266,7 @@ function renderIncomeDashboard(){
   $('#incomeMonthLabel').textContent=`${monthName}${ym===today.slice(0,7)?' · Tháng chưa kết thúc':''}`;
   const average=current.credits?current.expected/current.credits:null;
   $('#incomeStats').innerHTML=[
-    ['Lương ước tính',money(current.expected),current.records.length?'Từ chấm công, chuyên cần và BHXH đã chọn':'Chưa có bản ghi chấm công'],
+    ['Lương ước tính',money(current.expected),current.records.length?'Từ chấm công, các khoản tháng và BHXH đã chọn':'Từ các khoản theo tháng đã chọn'],
     ['Tiền đã nhận',money(current.received),current.payments.length?`${current.payments.length} khoản đã ghi nhận`:'Chưa ghi nhận khoản nhận tiền'],
     ['Công quy đổi',`${current.credits.toLocaleString('vi-VN')} công`,`${current.records.length} ngày có bản ghi`],
     ['Tăng ca',`${current.overtime.toLocaleString('vi-VN',{maximumFractionDigits:2})} giờ`,`${money(sumField(current.records,'overtimePay'))} tiền tăng ca`],
@@ -253,9 +275,9 @@ function renderIncomeDashboard(){
   const compareMetric=(label,key,available)=>{if(!available(current)||!available(previous))return`<div class="income-compare-item"><b>${label}</b><span>Chưa đủ dữ liệu để so sánh hai tháng.</span></div>`;const delta=current[key]-previous[key],percent=previous[key]===0?null:delta/Math.abs(previous[key])*100;return`<div class="income-compare-item"><b>${label}</b><span>Chênh lệch hiện tại: <strong>${key==='expected'||key==='received'?signedMoney(delta):`${signedNumber(delta)} ${key==='credits'?'công':''}`}</strong>${percent===null?' · Không thể tính tỷ lệ vì tháng trước bằng 0':` · ${signedNumber(percent,1)}% so với tháng trước`}</span><small>${money(key==='expected'?current.expected:current.received)} hiện tại · ${money(key==='expected'?previous.expected:previous.received)} tháng trước</small></div>`};
   $('#incomeComparison').innerHTML=`<div class="income-comparison-heading"><b>So với ${Number(previous.key.slice(5,7))}/${previous.key.slice(0,4)}</b><span>${ym===today.slice(0,7)?'Số liệu tháng hiện tại còn tạm tính, chưa nên xem là xu hướng cuối tháng.':'So sánh theo số liệu đã ghi nhận trong từng tháng.'}</span></div><div class="income-comparison-grid">${compareMetric('Lương ước tính','expected',month=>month.records.length>0)}${compareMetric('Tiền đã nhận','received',month=>month.payments.length>0)}</div>`;
   const breakdown=[
-    ['Lương ca',sumField(current.records,'basePay'),'plus'],['Tiền tăng ca',sumField(current.records,'overtimePay'),'plus'],['Phụ cấp',sumField(current.records,'allowance'),'plus'],['Thưởng trên bản ghi',sumField(current.records,'bonus'),'plus'],['Thưởng chuyên cần',current.bonus,'plus'],['Trừ đi trễ/về sớm',-sumField(current.records,'latePenalty')-sumField(current.records,'earlyPenalty'),'minus'],['Khấu trừ khác',-sumField(current.records,'otherDeduction'),'minus'],['Điều chỉnh',sumField(current.records,'adjustment'),'signed'],['BHXH',-current.bhxh,'minus']
+    ['Lương ca',sumField(current.records,'basePay'),'plus'],['Tiền tăng ca',sumField(current.records,'overtimePay'),'plus'],['Phụ cấp',sumField(current.records,'allowance'),'plus'],['Thưởng trên bản ghi',sumField(current.records,'bonus'),'plus'],['Thưởng tháng',current.bonus,'plus'],['Chuyên cần',current.attendanceBonus,'plus'],['Trừ đi trễ/về sớm',-sumField(current.records,'latePenalty')-sumField(current.records,'earlyPenalty'),'minus'],['Khấu trừ khác',-sumField(current.records,'otherDeduction'),'minus'],['Điều chỉnh',sumField(current.records,'adjustment'),'signed'],['BHXH',-current.bhxh,'minus']
   ];
-  $('#incomeBreakdown').innerHTML=current.records.length||current.bhxh?breakdown.map(([label,value,kind])=>`<div class="income-breakdown-item"><span>${label}</span><b class="${kind}">${signedMoney(value)}</b></div>`).join(''):'<p class="income-empty">Chưa có dữ liệu chấm công cho tháng này.</p>';
+  $('#incomeBreakdown').innerHTML=current.records.length||current.bhxh||current.bonus||current.attendanceBonus?breakdown.map(([label,value,kind])=>`<div class="income-breakdown-item"><span>${label}</span><b class="${kind}">${signedMoney(value)}</b></div>`).join(''):'<p class="income-empty">Chưa có dữ liệu chấm công cho tháng này.</p>';
   const workRecords=month=>month.records.filter(record=>record.status==='work');
   const countMatching=(records,predicate)=>records.filter(predicate).length;
   const nightCount=month=>countMatching(workRecords(month),record=>record.shiftType==='8-night'||record.shiftType==='11-night');
@@ -283,7 +305,7 @@ function renderIncomeChart(){
   const range=$('#incomeChartRange').value,metric=$('#incomeChartMetric').value;
   const months=range==='year'?Array.from({length:12},(_,index)=>`${year}-${String(index+1).padStart(2,'0')}`):Array.from({length:Number(range)},(_,index)=>monthOffset(ym,index-Number(range)+1));
   const titles={expected:'Lương ước tính',received:'Tiền đã nhận',days:'Ngày công quy đổi',overtime:'Giờ tăng ca'};
-  const valid=month=>metric==='received'?month.payments.length>0:month.records.length>0;
+  const valid=month=>metric==='received'?month.payments.length>0:metric==='expected'?month.records.length>0||month.attendanceBonus>0||month.bonus>0||month.bhxh>0:month.records.length>0;
   const points=months.map(key=>{const stats=incomeMonthStats(key);return{key,label:`T${Number(key.slice(5,7))}`,value:stats[metric==='days'?'credits':metric]??0,available:valid(stats)}});
   const availablePoints=points.filter(point=>point.available);
   const status=$('#incomeChartStatus');
@@ -299,23 +321,23 @@ function renderYear(){
   $('#yearInput').value=year;
   const months=Array.from({length:12},(_,i)=>{
     const month=String(i+1).padStart(2,'0'),key=`${year}-${month}`,R=recs.filter(r=>r.workDate.startsWith(key)),P=pays.filter(p=>p.payrollMonth===key);
-    const sum=k=>R.reduce((a,r)=>a+(Number(r[k])||0),0),days=equivalentWorkDays(R),hours=sum('totalSec')/3600,overtime=sum('overtimeSec')/3600,attendanceBonus=attendanceBonusFor(R),bhxh=bhxhFor(key);
-    return{key,month:i+1,records:R.length,days,hours,overtime,average:days?hours/days:0,attendanceBonus,bhxh,expected:sum('expectedTotal')+attendanceBonus-bhxh,received:P.reduce((a,p)=>a+(Number(p.amount)||0),0)};
+    const sum=k=>R.reduce((a,r)=>a+(Number(r[k])||0),0),days=equivalentWorkDays(R),hours=sum('totalSec')/3600,overtime=sum('overtimeSec')/3600,attendanceBonus=attendanceBonusFor(key),bonus=monthlyBonusFor(key),bhxh=bhxhFor(key);
+    return{key,month:i+1,records:R.length,days,hours,overtime,average:days?hours/days:0,attendanceBonus,bonus,bhxh,expected:sum('expectedTotal')+attendanceBonus+bonus-bhxh,received:P.reduce((a,p)=>a+(Number(p.amount)||0),0)};
   });
-  const totalHours=months.reduce((a,m)=>a+m.hours,0),totalOvertime=months.reduce((a,m)=>a+m.overtime,0),totalDays=months.reduce((a,m)=>a+m.days,0),totalBonus=months.reduce((a,m)=>a+m.attendanceBonus,0),totalBhxh=months.reduce((a,m)=>a+m.bhxh,0),totalExpected=months.reduce((a,m)=>a+m.expected,0),totalReceived=months.reduce((a,m)=>a+m.received,0),worked=months.filter(m=>m.days>0);
+  const totalHours=months.reduce((a,m)=>a+m.hours,0),totalOvertime=months.reduce((a,m)=>a+m.overtime,0),totalDays=months.reduce((a,m)=>a+m.days,0),totalBonus=months.reduce((a,m)=>a+m.attendanceBonus,0),totalMonthlyBonus=months.reduce((a,m)=>a+m.bonus,0),totalBhxh=months.reduce((a,m)=>a+m.bhxh,0),totalExpected=months.reduce((a,m)=>a+m.expected,0),totalReceived=months.reduce((a,m)=>a+m.received,0),worked=months.filter(m=>m.days>0);
   const extrema=(fn,pick)=>{if(!worked.length)return'—';const value=pick(...worked.map(fn));return worked.filter(m=>fn(m)===value).map(m=>`T${m.month}`).join(', ')};
   $('#yearStats').innerHTML=[
-    ['Tổng lương dự kiến',money(totalExpected)],['Tổng chuyên cần',money(totalBonus)],['Tổng trừ BHXH',money(totalBhxh)],['Tổng thực nhận',money(totalReceived)],['Số ngày làm quy đổi',`${totalDays.toLocaleString('vi-VN')} công`],
+    ['Tổng lương dự kiến',money(totalExpected)],['Tổng chuyên cần',money(totalBonus)],['Tổng thưởng tháng',money(totalMonthlyBonus)],['Tổng trừ BHXH',money(totalBhxh)],['Tổng thực nhận',money(totalReceived)],['Số ngày làm quy đổi',`${totalDays.toLocaleString('vi-VN')} công`],
     ['Tổng giờ làm',`${totalHours.toFixed(2)} giờ`],['Tổng giờ tăng ca',`${totalOvertime.toFixed(2)} giờ`],['Giờ làm TB/tháng',worked.length?`${(totalHours/worked.length).toFixed(2)} giờ`:'—'],
     ['Tháng nhiều công nhất',extrema(m=>m.days,Math.max)],['Tháng ít công nhất',worked.length<2?'—':extrema(m=>m.days,Math.min)]
-  ].map(([label,value],i)=>`<div>${label}<b>${value}</b>${i===7?`<small>Trung bình trên ${worked.length} tháng có ngày làm</small>`:''}${i===8||i===9?'<small>Trong các tháng có ngày làm</small>':''}</div>`).join('');
+  ].map(([label,value])=>`<div>${label}<b>${value}</b>${label==='Giờ làm TB/tháng'?`<small>Trung bình trên ${worked.length} tháng có ngày làm</small>`:''}${label==='Tháng nhiều công nhất'||label==='Tháng ít công nhất'?'<small>Trong các tháng có ngày làm</small>':''}</div>`).join('');
   const max=Math.max(0,...months.flatMap(m=>[m.expected,m.received])),min=Math.min(0,...months.flatMap(m=>[m.expected,m.received])),spread=max-min,range=spread||1,chartW=480,chartH=300,top=22,bottom=42,left=46,right=8,plotH=chartH-top-bottom,plotW=chartW-left-right,barW=8,zeroY=top+plotH*max/range;
   const lines=Array.from({length:5},(_,i)=>{const y=top+plotH*i/4,value=max-spread*i/4;return`<line x1="${left}" y1="${y}" x2="${chartW-right}" y2="${y}" class="chart-grid"/><text x="${left-8}" y="${y+4}" text-anchor="end" class="chart-axis">${compactMoney(value)}</text>`}).join('');
   const bar=(x,value,kind,month)=>{const height=Math.abs(value)*plotH/range,y=value>=0?zeroY-height:zeroY;return`<rect x="${x}" y="${y}" width="${barW}" height="${height}" rx="2" class="${kind}"><title>T${month}: ${kind==='bar-expected'?'lương dự kiến':'thực nhận'} ${money(value)}</title></rect>`};
   const bars=months.map((m,i)=>{const center=left+plotW*(i+.5)/12;return`${bar(center-barW-2,m.expected,'bar-expected',m.month)}${bar(center+2,m.received,'bar-paid',m.month)}<text x="${center}" y="${chartH-14}" text-anchor="middle" class="chart-axis">T${m.month}</text>`}).join('');
-  const hasYearData=recs.some(record=>record.workDate.startsWith(String(year)))||pays.some(payment=>payment.payrollMonth?.startsWith(String(year)));
+  const hasYearData=recs.some(record=>record.workDate.startsWith(String(year)))||pays.some(payment=>payment.payrollMonth?.startsWith(String(year)))||months.some(month=>month.attendanceBonus||month.bonus||month.bhxh);
   $('#yearChart').innerHTML=hasYearData?`<svg viewBox="0 0 ${chartW} ${chartH}" role="img" aria-label="Biểu đồ lương dự kiến và tiền thực nhận theo từng tháng năm ${year}">${lines}${bars}</svg>`:`<div class="empty-state" role="status"><span aria-hidden="true">▥</span><b>Chưa có dữ liệu trong năm ${year}</b><p>Thống kê sẽ cập nhật khi bạn bắt đầu ghi nhận chấm công hoặc khoản tiền đã nhận.</p></div>`;
-  $('#yearTable').innerHTML='<tr><th>Tháng<th>Công<th>Giờ làm<th>Giờ TB/công<th>Tăng ca<th>Chuyên cần<th>BHXH<th>Lương dự kiến<th>Thực nhận</tr>'+months.map(m=>`<tr><td>T${m.month}<td>${m.days.toLocaleString('vi-VN')}<td>${m.hours.toFixed(2)}<td>${m.average.toFixed(2)}<td>${m.overtime.toFixed(2)}<td>${money(m.attendanceBonus)}<td>${money(m.bhxh)}<td>${money(m.expected)}<td>${money(m.received)}</tr>`).join('')+`<tr class="year-total"><th>Cả năm<th>${totalDays.toLocaleString('vi-VN')}<th>${totalHours.toFixed(2)}<th>${totalDays?(totalHours/totalDays).toFixed(2):'0.00'}<th>${totalOvertime.toFixed(2)}<th>${money(totalBonus)}<th>${money(totalBhxh)}<th>${money(totalExpected)}<th>${money(totalReceived)}</tr>`;
+  $('#yearTable').innerHTML='<tr><th>Tháng<th>Công<th>Giờ làm<th>Giờ TB/công<th>Tăng ca<th>Chuyên cần<th>Thưởng tháng<th>BHXH<th>Lương dự kiến<th>Thực nhận</tr>'+months.map(m=>`<tr><td>T${m.month}<td>${m.days.toLocaleString('vi-VN')}<td>${m.hours.toFixed(2)}<td>${m.average.toFixed(2)}<td>${m.overtime.toFixed(2)}<td>${money(m.attendanceBonus)}<td>${money(m.bonus)}<td>${money(m.bhxh)}<td>${money(m.expected)}<td>${money(m.received)}</tr>`).join('')+`<tr class="year-total"><th>Cả năm<th>${totalDays.toLocaleString('vi-VN')}<th>${totalHours.toFixed(2)}<th>${totalDays?(totalHours/totalDays).toFixed(2):'0.00'}<th>${totalOvertime.toFixed(2)}<th>${money(totalBonus)}<th>${money(totalMonthlyBonus)}<th>${money(totalBhxh)}<th>${money(totalExpected)}<th>${money(totalReceived)}</tr>`;
 }
 function compactMoney(n){const sign=n<0?'-':'';n=Math.abs(n);if(n>=1000000)return`${sign}${(n/1000000).toLocaleString('vi-VN',{maximumFractionDigits:1})}tr`;if(n>=1000)return`${sign}${Math.round(n/1000)}k`;return`${sign}${Math.round(n)}`}
 function conv(){const s=get('s_');$('#conv').textContent=s.payMode==='daily'?`${money(s.dailyRate/s.stdH)}/giờ · ca 13h ${money(s.dailyRate13)}/ngày · ca đêm 8h ${money(s.dailyRateNight8)} · ca đêm 11h ${money(s.dailyRateNight11)}`:money(s.hourlyRate)+'/giờ'}
@@ -480,11 +502,18 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.query
 $('#yearInput').onchange=e=>{const next=Number(e.target.value);if(!Number.isInteger(next)||next<2000||next>9999){toast('Năm phải từ 2000 đến 9999');e.target.value=year;return}year=next;renderYear();renderIncomeDashboard()};
 $('#sf').addEventListener('input',()=>{conv();if(cur&&$('#dlg').open)syncShiftOptions(cur,$('#m_shiftType').value)});
 $('#ssave').onclick=async()=>{const s=get('s_');if(!(s.stdH>0&&s.interval>0))return toast('Giờ công và mốc đi trễ phải > 0');if(!Number.isFinite(s.bhxhAmount)||s.bhxhAmount<0)return toast('Tiền BHXH phải là số không âm');S={...s,id:'default'};try{await put('settings',S);renderPay();renderYear();toast('Đã lưu mặc định (không ảnh hưởng ngày cũ)')}catch(error){toast('Lỗi lưu thiết lập: '+error.message)}};
-$('#bhxhEnabled').addEventListener('change',async event=>{const setting={id:`payroll:${ym}`,bhxhEnabled:event.target.checked};try{await put('settings',setting);monthlySettings.set(setting.id,setting);renderPay();renderYear()}catch(error){event.target.checked=!event.target.checked;toast('Lỗi lưu lựa chọn BHXH: '+error.message)}});
+$('#attendanceBonusEnabled').addEventListener('change',event=>savePayrollSetting('attendanceBonusEnabled',event.target.checked,'lựa chọn chuyên cần'));
+$('#bonusEnabled').addEventListener('change',event=>savePayrollSetting('bonusEnabled',event.target.checked,'lựa chọn thưởng tháng'));
+$('#bonusAmount').addEventListener('change',event=>{
+  const value=event.target.value===''?0:Number(event.target.value);
+  if(!Number.isFinite(value)||value<0){toast('Tiền thưởng phải là số không âm');renderPay();return}
+  savePayrollSetting('bonusAmount',value,'tiền thưởng');
+});
+$('#bhxhEnabled').addEventListener('change',event=>savePayrollSetting('bhxhEnabled',event.target.checked,'lựa chọn BHXH'));
 $('#padd').onclick=async()=>{const a=+$('#pa').value,d=$('#pd').value;if(!d||!a)return toast('Nhập ngày và số tiền');await put('payments',{id:crypto.randomUUID(),paymentDate:d,payrollMonth:ym,amount:a,type:$('#pt').value,note:$('#pn').value,createdAt:Date.now()});$('#pa').value='';await load();toast('Đã thêm')};
 const dl=(name,txt,mime)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:mime}));a.download=name;a.click()};
 $('#exp').onclick=async()=>dl(`workpay-${today}.json`,JSON.stringify({app:'workpay',version:1,attendance:await all('attendance'),payments:await all('payments'),settings:await all('settings')},null,1),'application/json');
-$('#csv').onclick=()=>{const h=['Ngày','Trạng thái','Ca','Công','Phút trễ','Mốc trễ','Giờ tăng ca','Lương ca','Tiền tăng ca','Trừ trễ','Trừ về sớm','Phụ cấp','Thưởng','Khấu trừ khác','Điều chỉnh','Tổng'],R=monthRecs(),rows=R.map(r=>[formatDate(r.workDate),r.status,r.shiftHours?shiftLabel(r.shiftType||(r.shiftHours===13?'13-day':'8-day'),r.shiftHours):r.start?`${r.start}–${r.end||''}`:'',r.halfDay?'Nửa ngày':'Đủ ca',r.lateMinutes??Math.round((r.lateSec||0)/60),r.lateIntervals||0,r.overtimeHours??((r.overtimeSec||0)/3600),r.basePay,r.overtimePay,r.latePenalty,r.earlyPenalty,r.allowance,r.bonus,r.otherDeduction,r.adjustment,r.expectedTotal]);const bonus=attendanceBonusFor(R),bhxh=bhxhFor(ym);if(bonus){const bonusRow=Array(h.length).fill('');bonusRow[0]='Thưởng chuyên cần';bonusRow[h.length-1]=bonus;rows.push(bonusRow)}if(bhxh){const bhxhRow=Array(h.length).fill('');bhxhRow[0]='Khấu trừ BHXH';bhxhRow[h.length-1]=-bhxh;rows.push(bhxhRow)}const totalRow=Array(h.length).fill('');totalRow[0]='Lương dự kiến sau khấu trừ';totalRow[h.length-1]=R.reduce((total,r)=>total+(Number(r.expectedTotal)||0),0)+bonus-bhxh;rows.push(totalRow);dl(`luong-${ym}.csv`,'\ufeff'+[h,...rows].map(l=>l.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n'),'text/csv')};
+$('#csv').onclick=()=>{const h=['Ngày','Trạng thái','Ca','Công','Phút trễ','Mốc trễ','Giờ tăng ca','Lương ca','Tiền tăng ca','Trừ trễ','Trừ về sớm','Phụ cấp','Thưởng','Khấu trừ khác','Điều chỉnh','Tổng'],R=monthRecs(),rows=R.map(r=>[formatDate(r.workDate),r.status,r.shiftHours?shiftLabel(r.shiftType||(r.shiftHours===13?'13-day':'8-day'),r.shiftHours):r.start?`${r.start}–${r.end||''}`:'',r.halfDay?'Nửa ngày':'Đủ ca',r.lateMinutes??Math.round((r.lateSec||0)/60),r.lateIntervals||0,r.overtimeHours??((r.overtimeSec||0)/3600),r.basePay,r.overtimePay,r.latePenalty,r.earlyPenalty,r.allowance,r.bonus,r.otherDeduction,r.adjustment,r.expectedTotal]);const attendanceBonus=attendanceBonusFor(ym),bonus=monthlyBonusFor(ym),bhxh=bhxhFor(ym);if(attendanceBonus){const bonusRow=Array(h.length).fill('');bonusRow[0]='Chuyên cần';bonusRow[h.length-1]=attendanceBonus;rows.push(bonusRow)}if(bonus){const bonusRow=Array(h.length).fill('');bonusRow[0]='Thưởng tháng';bonusRow[h.length-1]=bonus;rows.push(bonusRow)}if(bhxh){const bhxhRow=Array(h.length).fill('');bhxhRow[0]='Khấu trừ BHXH';bhxhRow[h.length-1]=-bhxh;rows.push(bhxhRow)}const totalRow=Array(h.length).fill('');totalRow[0]='Lương dự kiến sau khấu trừ';totalRow[h.length-1]=R.reduce((total,r)=>total+(Number(r.expectedTotal)||0),0)+attendanceBonus+bonus-bhxh;rows.push(totalRow);dl(`luong-${ym}.csv`,'\ufeff'+[h,...rows].map(l=>l.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n'),'text/csv')};
 $('#imp').onchange=async e=>{try{const d=JSON.parse(await e.target.files[0].text());if(d.app!=='workpay'||d.version!==1||!Array.isArray(d.attendance)||!Array.isArray(d.payments))throw Error('Sai định dạng/phiên bản');const rep=$('#imode').value==='replace';if(!confirm(`Nhập ${d.attendance.length} chấm công, ${d.payments.length} thanh toán (${rep?'THAY THẾ toàn bộ dữ liệu hiện có':'hợp nhất'})?`))return;await bulk(d,rep);await load();toast('Đã nhập')}catch(x){toast('Lỗi nhập: '+x.message)}e.target.value=''};
 $('#wipe').onclick=async()=>{if(confirm('Xóa TOÀN BỘ dữ liệu? Không thể hoàn tác.')&&confirm('Xác nhận lần cuối: bạn đã xuất sao lưu chưa?')){await bulk({},true);await load()}};
 await load();

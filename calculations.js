@@ -64,7 +64,3 @@ export function calc(i){
 export function countWorkCredits(records){
   return records.filter(record=>record.status==='work').reduce((credits,record)=>credits+(record.halfDay?0.5:1),0);
 }
-
-export function calculateAttendanceBonus(records,amount){
-  return countWorkCredits(records)>=26?Number(amount)||0:0;
-}
