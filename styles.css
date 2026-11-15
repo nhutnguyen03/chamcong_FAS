@@ -2280,9 +2280,20 @@ nav button.on {
   font-size: 13px;
 }
 
-.income-compare-item strong,
 .income-breakdown-item .plus {
   color: #167444;
+}
+
+.income-compare-item strong.increase {
+  color: #167444;
+}
+
+.income-compare-item strong.decrease {
+  color: var(--color-danger);
+}
+
+.income-compare-item strong.unchanged {
+  color: var(--color-muted);
 }
 
 .income-breakdown-item .minus {
