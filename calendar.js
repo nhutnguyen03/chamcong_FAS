@@ -144,9 +144,11 @@ function specialEvents(lunar, nextLunar, month, day) {
     '4-30': [{ type: 'holiday', title: 'Ngày Giải phóng miền Nam' }],
     '5-1': [{ type: 'holiday', title: 'Ngày Quốc tế Lao động' }],
     '6-1': [{ type: 'event', title: 'Ngày Quốc tế Thiếu nhi' }],
+    '7-27': [{ type: 'holiday', title: 'Ngày Thương binh Liệt sĩ' }],
     '9-2': [{ type: 'holiday', title: 'Quốc Khánh Việt Nam' }],
     '10-20': [{ type: 'event', title: 'Ngày Phụ nữ Việt Nam' }],
     '11-20': [{ type: 'event', title: 'Ngày Nhà giáo Việt Nam' }],
+    '11-24': [{ type: 'holiday', title: 'Ngày Văn hóa Việt Nam' }],
     '12-24': [{ type: 'event', title: 'Đêm Giáng Sinh' }],
     '12-25': [{ type: 'event', title: 'Lễ Giáng Sinh' }]
   };

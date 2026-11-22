@@ -29,9 +29,18 @@ function updateInstallButtons(){
 }
 function setConnectionStatus(online,reconnected=false){
   clearTimeout(connectionMessageTimer);
-  connectionStatus.textContent=online?(reconnected?'✅ Đã kết nối Internet':'🟢 Đang online'):'🟠 Bạn đang offline - dữ liệu vẫn được lưu trên thiết bị.';
-  connectionStatus.classList.toggle('is-offline',!online);
-  if(online&&reconnected)connectionMessageTimer=setTimeout(()=>{connectionStatus.textContent='🟢 Đang online'},3000);
+  const dot=connectionStatus.querySelector('.conn-dot');
+  if(online&&reconnected){
+    connectionStatus.innerHTML='<span class="conn-dot" aria-hidden="true"></span>Đã kết nối Internet';
+    connectionStatus.classList.toggle('is-offline',false);
+    connectionMessageTimer=setTimeout(()=>{connectionStatus.innerHTML='<span class="conn-dot" aria-hidden="true"></span>Đang online';},3000);
+  }else if(online){
+    connectionStatus.innerHTML='<span class="conn-dot" aria-hidden="true"></span>Đang online';
+    connectionStatus.classList.toggle('is-offline',false);
+  }else{
+    connectionStatus.innerHTML='<span class="conn-dot" aria-hidden="true"></span>Bạn đang offline – dữ liệu vẫn được lưu trên thiết bị.';
+    connectionStatus.classList.toggle('is-offline',true);
+  }
 }
 window.addEventListener('offline',()=>{
   if(previousOnlineState===false)return;
@@ -230,7 +239,8 @@ async function savePayrollSetting(key,value,errorLabel){
     toast(`Lỗi lưu ${errorLabel}: ${error.message}`);
   }
 }
-function render(){renderQuickAttendance();renderCal();renderPay();renderYear();fill('s_',S);conv()}
+function render(){renderSalaryCard();renderQuickAttendance();renderCal();renderPay();renderYear();fill('s_',S);conv()}
+function renderSalaryCard(){const todayMonth=today.slice(0,7),monthNum=Number(todayMonth.slice(5,7)),stats=incomeMonthStats(todayMonth);$('#salaryCardLabel').textContent=`Lương dự kiến · Tháng ${monthNum}`;$('#salaryCardSection').setAttribute('aria-label',`Lương dự kiến tháng ${monthNum}`);$('#salaryCardAmount').textContent=money(stats.expected);$('#salaryStatDays').textContent=stats.credits.toLocaleString('vi-VN');$('#salaryStatPaid').textContent=stats.regular.toLocaleString('vi-VN',{maximumFractionDigits:1});$('#salaryStatOvertime').textContent=stats.overtime.toLocaleString('vi-VN',{maximumFractionDigits:1})}
 function renderQuickAttendance(){const record=recs.find(item=>item.workDate===today);$('#quickAttendanceDate').textContent=formatDate(today);$('#quickAttendanceStatus').textContent=record?`${record.status==='work'?'Đã chấm công':record.status==='unpaid'?'Đã ghi nhận nghỉ không lương':record.status==='paid'?'Đã ghi nhận nghỉ có lương':'Đã ghi nhận nghỉ lễ'}${record.shiftType?` · ${shiftLabel(record.shiftType,record.shiftHours)}`:''} · ${money(record.expectedTotal)}`:'Chưa có chấm công hôm nay';$('#quickAttendanceButton').textContent=record?'Sửa chấm công':'Chấm công hôm nay'}
 function renderCal(){const[y,m]=ym.split('-').map(Number);$('#ml').textContent=`Tháng ${m}/${y}`;const first=new Date(Date.UTC(y,m-1,1)),off=(first.getUTCDay()+6)%7;let h=['T2','T3','T4','T5','T6','T7','CN'].map(d=>`<div class=h>${d}</div>`).join('');
 for(let i=0;i<42;i++){const d=new Date(Date.UTC(y,m-1,1-off+i)),ds=d.toISOString().slice(0,10),r=recs.find(x=>x.workDate===ds),events=getCalendarDayInfo(ds).events,types=[...new Set(events.map(event=>event.type))],isSunday=d.getUTCDay()===0,dayEvents=events.map(event=>event.title).join(' · ');const cls=['day',d.getUTCMonth()!==m-1&&'o',ds===today&&'t',ds===cur&&'selected',isSunday&&'sunday',r&&(r.status==='work'?(r.lateIntervals||r.earlyIntervals?'l':'w'):r.status==='unpaid'?'u':'v'),r?.note&&'has-note'].filter(Boolean).join(' '),accessibleLabel=[formatDate(ds),isSunday?'Chủ nhật':'',r?.status==='work'?'Đã chấm công':r?'Đã ghi nhận ngày nghỉ':'Chưa chấm công',r?.note?'Có ghi chú':'',dayEvents].filter(Boolean).join('. ');
@@ -256,7 +266,7 @@ function incomeMonthStats(key){
   const records=recs.filter(record=>typeof record.workDate==='string'&&record.workDate.startsWith(key));
   const payments=pays.filter(payment=>payment.payrollMonth===key);
   const attendanceBonus=attendanceBonusFor(key),bonus=monthlyBonusFor(key),bhxh=bhxhFor(key);
-  return{key,records,payments,credits:equivalentWorkDays(records),hours:sumField(records,'totalSec')/3600,overtime:sumField(records,'overtimeSec')/3600,expected:sumField(records,'expectedTotal')+attendanceBonus+bonus-bhxh,received:payments.reduce((total,payment)=>total+safeNumber(payment.amount),0),attendanceBonus,bonus,bhxh};
+  return{key,records,payments,credits:equivalentWorkDays(records),hours:sumField(records,'totalSec')/3600,regular:sumField(records,'regularSec')/3600,overtime:sumField(records,'overtimeSec')/3600,expected:sumField(records,'expectedTotal')+attendanceBonus+bonus-bhxh,received:payments.reduce((total,payment)=>total+safeNumber(payment.amount),0),attendanceBonus,bonus,bhxh};
 }
 function signedMoney(value){return`${value>0?'+':''}${money(value)}`}
 function renderIncomeDashboard(){
@@ -336,7 +346,7 @@ function renderYear(){
   const bar=(x,value,kind,month)=>{const height=Math.abs(value)*plotH/range,y=value>=0?zeroY-height:zeroY;return`<rect x="${x}" y="${y}" width="${barW}" height="${height}" rx="2" class="${kind}"><title>T${month}: ${kind==='bar-expected'?'lương dự kiến':'thực nhận'} ${money(value)}</title></rect>`};
   const bars=months.map((m,i)=>{const center=left+plotW*(i+.5)/12;return`${bar(center-barW-2,m.expected,'bar-expected',m.month)}${bar(center+2,m.received,'bar-paid',m.month)}<text x="${center}" y="${chartH-14}" text-anchor="middle" class="chart-axis">T${m.month}</text>`}).join('');
   const hasYearData=recs.some(record=>record.workDate.startsWith(String(year)))||pays.some(payment=>payment.payrollMonth?.startsWith(String(year)))||months.some(month=>month.attendanceBonus||month.bonus||month.bhxh);
-  $('#yearChart').innerHTML=hasYearData?`<svg viewBox="0 0 ${chartW} ${chartH}" role="img" aria-label="Biểu đồ lương dự kiến và tiền thực nhận theo từng tháng năm ${year}">${lines}${bars}</svg>`:`<div class="empty-state" role="status"><span aria-hidden="true">▥</span><b>Chưa có dữ liệu trong năm ${year}</b><p>Thống kê sẽ cập nhật khi bạn bắt đầu ghi nhận chấm công hoặc khoản tiền đã nhận.</p></div>`;
+  $('#yearChart').innerHTML=hasYearData?`<svg viewBox="0 0 ${chartW} ${chartH}" role="img" aria-label="Biểu đồ lương dự kiến và tiền thực nhận theo từng tháng năm ${year}">${lines}${bars}</svg>`:`<div class="empty-state" role="status"><span class="empty-state-icon" aria-hidden="true"></span><b>Chưa có dữ liệu trong năm ${year}</b><p>Thống kê sẽ cập nhật khi bạn bắt đầu ghi nhận chấm công hoặc khoản tiền đã nhận.</p></div>`;
   $('#yearTable').innerHTML='<tr><th>Tháng<th>Công<th>Giờ làm<th>Giờ TB/công<th>Tăng ca<th>Chuyên cần<th>Thưởng tháng<th>BHXH<th>Lương dự kiến<th>Thực nhận</tr>'+months.map(m=>`<tr><td>T${m.month}<td>${m.days.toLocaleString('vi-VN')}<td>${m.hours.toFixed(2)}<td>${m.average.toFixed(2)}<td>${m.overtime.toFixed(2)}<td>${money(m.attendanceBonus)}<td>${money(m.bonus)}<td>${money(m.bhxh)}<td>${money(m.expected)}<td>${money(m.received)}</tr>`).join('')+`<tr class="year-total"><th>Cả năm<th>${totalDays.toLocaleString('vi-VN')}<th>${totalHours.toFixed(2)}<th>${totalDays?(totalHours/totalDays).toFixed(2):'0.00'}<th>${totalOvertime.toFixed(2)}<th>${money(totalBonus)}<th>${money(totalMonthlyBonus)}<th>${money(totalBhxh)}<th>${money(totalExpected)}<th>${money(totalReceived)}</tr>`;
 }
 function compactMoney(n){const sign=n<0?'-':'';n=Math.abs(n);if(n>=1000000)return`${sign}${(n/1000000).toLocaleString('vi-VN',{maximumFractionDigits:1})}tr`;if(n>=1000)return`${sign}${Math.round(n/1000)}k`;return`${sign}${Math.round(n)}`}
@@ -357,7 +367,7 @@ async function openDay(d){
   renderQuickAttendance();renderCal();renderPay();renderYear();openedRecord=r?JSON.parse(JSON.stringify(r)):null;
   const info=getCalendarDayInfo(d);
   $('#dt').textContent='Chấm công ngày '+formatDate(d);
-  $('#calendarInfo').innerHTML=`<div class="calendar-date-meta"><span>📅 ${info.weekday}</span><span>🌙 ${info.lunar.day} tháng ${info.lunar.month}${info.lunar.isLeapMonth?' nhuận':''} Âm lịch</span></div>${info.events.length?`<div class="calendar-events"><b>Ngày đặc biệt</b>${info.events.map(event=>`<div class="calendar-event ${event.type}"><span>${event.type==='holiday'?'🇻🇳':'📌'}</span><span>${event.title}</span></div>`).join('')}</div>`:''}`;
+  $('#calendarInfo').innerHTML=`<div class="calendar-date-meta"><span class="meta-tag meta-tag-day">${info.weekday}</span><span class="meta-tag meta-tag-lunar">${info.lunar.day} tháng ${info.lunar.month}${info.lunar.isLeapMonth?' nhuận':''} AL</span></div>${info.events.length?`<div class="calendar-events"><b>Ngày đặc biệt</b>${info.events.map(event=>`<div class="calendar-event ${event.type}"><span class="event-icon-mark" aria-hidden="true"></span><span>${event.title}</span></div>`).join('')}</div>`:''}`;
   const defaultShift=isSundayDate(d)?{shiftType:'13-day',shiftHours:13}:{shiftType:'8-day',shiftHours:8};
   const o=r||{...S,status:'work',...defaultShift,lateEnabled:false,lateMinutes:0,halfDay:false,overtimeHours:0,allowance:0,bonus:0,otherDeduction:0,adjustment:0,note:''};
   $('#m_status').value=o.status;

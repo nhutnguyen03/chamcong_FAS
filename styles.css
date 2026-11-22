@@ -6,6 +6,12 @@
   --color-text: #1c2430;
   --color-muted: #667085;
   --color-danger: #c62828;
+  /* New tokens */
+  --color-salary-bg: #1D4ED8;
+  --color-today-btn: #0F172A;
+  --color-border-secondary: #E2E8F0;
+  --color-online: #047857;
+  --color-offline: #92400e;
 }
 
 * {
@@ -78,13 +84,29 @@ header small {
 }
 
 .connection-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
   color: #23613e;
   overflow-wrap: anywhere;
 }
 
+.conn-dot {
+  display: inline-block;
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-online);
+}
+
 .connection-status.is-offline {
   color: #a65b00;
+}
+
+.connection-status.is-offline .conn-dot {
+  background: #9e6a00;
 }
 
 .pwa-actions {
@@ -183,6 +205,7 @@ main {
   padding: 12px;
 }
 
+/* ── Quick attendance card (legacy fallback kept) ── */
 .quick-attendance {
   display: flex;
   align-items: center;
@@ -204,6 +227,127 @@ main {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
+}
+
+/* ── Salary preview card ── */
+.quick-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.salary-preview-card {
+  padding: 20px;
+  border-radius: 20px;
+  background: var(--color-salary-bg);
+  color: #fff;
+}
+
+.salary-card-label {
+  font-size: 13px;
+  color: rgba(255,255,255,.85);
+  line-height: 1.4;
+}
+
+.salary-card-amount {
+  font-size: clamp(28px, 8vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 6px 0 16px;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.salary-card-stats {
+  display: flex;
+  gap: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,.25);
+}
+
+.salary-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.salary-stat-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.salary-stat-label {
+  font-size: 12px;
+  color: rgba(255,255,255,.85);
+  line-height: 1.3;
+}
+
+/* ── Today card ── */
+.today-card {
+  border-radius: 20px;
+  padding: 18px 20px;
+}
+
+.today-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.today-header .section-kicker {
+  margin-bottom: 0;
+}
+
+.quick-actions-new {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.quick-btn-primary {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 16px;
+  background: var(--color-today-btn);
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 130ms ease;
+}
+
+.quick-btn-primary:hover {
+  background: #1e293b;
+}
+
+.quick-btn-secondary {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 130ms ease, background 130ms ease;
+}
+
+.quick-btn-secondary:hover {
+  border-color: #c8d8f0;
+  background: #f8fbff;
 }
 
 .clone-dialog {
@@ -893,6 +1037,10 @@ dialog::backdrop {
   --color-danger: #bd3434;
   --surface-shadow: 0 8px 26px rgb(21 49 91 / 6%);
   --surface-radius: 16px;
+  --color-salary-bg: #1D4ED8;
+  --color-today-btn: #0F172A;
+  --color-border-secondary: #E2E8F0;
+  --color-online: #047857;
 }
 
 body {
@@ -954,6 +1102,11 @@ body {
   max-width: 275px;
   font-size: 12px;
   font-weight: 600;
+}
+
+/* Styled: connection-status uses flex (from base), just override color-scheme */
+.header-actions .connection-status .conn-dot {
+  flex: 0 0 8px;
 }
 
 .support-open {
@@ -1042,6 +1195,22 @@ main {
   font-size: 12px;
 }
 
+/* Styled salary card & today card overrides */
+.salary-preview-card {
+  box-shadow: var(--surface-shadow);
+}
+
+.today-card {
+  border-radius: var(--surface-radius);
+  box-shadow: var(--surface-shadow);
+}
+
+/* header connection-status styled override */
+.header-actions .connection-status {
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .quick-actions button,
 .pwa-action,
 .pwa-later,
@@ -1118,8 +1287,11 @@ nav button.on {
 }
 
 .nav-icon {
-  display: block;
-  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
   line-height: 1.05;
 }
 
@@ -1727,11 +1899,29 @@ nav button.on {
   }
 
   .nav-icon {
-    font-size: 17px;
+    width: 20px;
+    height: 20px;
   }
 
   .quick-attendance {
     padding: 15px;
+  }
+
+  .salary-preview-card {
+    padding: 16px;
+  }
+
+  .salary-card-amount {
+    font-size: clamp(24px, 7vw, 30px);
+  }
+
+  .today-card {
+    padding: 15px;
+  }
+
+  .quick-btn-primary {
+    min-height: 48px;
+    font-size: 15px;
   }
 
   .calendar-card {
@@ -2436,3 +2626,300 @@ nav button.on {
     font-size: 10px;
   }
 }
+
+
+/* ════════════════════════════════════════════
+   Quick wrapper – desktop side-by-side layout
+   ════════════════════════════════════════════ */
+@media (min-width: 900px) {
+  .quick-wrapper {
+    flex-direction: row;
+    align-items: stretch;
+    max-width: 1080px;
+  }
+
+  .salary-preview-card {
+    flex: 6 1 0;
+    min-width: 0;
+  }
+
+  .today-card {
+    flex: 4 1 0;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 899px) {
+  .quick-wrapper {
+    gap: 0;
+  }
+
+  .today-card .today-header,
+  .today-card #quickAttendanceStatus,
+  #quickCalendarButton {
+    display: none;
+  }
+
+  .today-card {
+    margin: 12px 0 10px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .quick-actions-new {
+    margin: 0;
+  }
+
+  #quickAttendanceButton {
+    min-height: 52px;
+  }
+}
+
+/* ════════════════════════════════════════════
+   Calendar info modal – meta tags (replace emoji)
+   ════════════════════════════════════════════ */
+.calendar-date-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+
+.meta-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.meta-tag::before {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  content: "";
+  flex: 0 0 7px;
+}
+
+.meta-tag-day {
+  background: #edf4ff;
+  color: #2254a8;
+}
+
+.meta-tag-day::before {
+  background: #2463d3;
+}
+
+.meta-tag-lunar {
+  background: #f5f0ff;
+  color: #5b3fa8;
+}
+
+.meta-tag-lunar::before {
+  background: #7c5dd6;
+}
+
+/* Event icon mark – replaces flag/pin emoji */
+.event-icon-mark {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  flex: 0 0 8px;
+}
+
+.calendar-event.holiday .event-icon-mark {
+  background: #d9342b;
+}
+
+.calendar-event.event .event-icon-mark {
+  background: #0d7dd1;
+}
+
+/* ════════════════════════════════════════════
+   Empty state – chart icon (replaces ▥)
+   ════════════════════════════════════════════ */
+.empty-state-icon {
+  display: block;
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 4px;
+  border-radius: 10px;
+  background: #d6e6fa;
+  position: relative;
+}
+
+.empty-state-icon::before,
+.empty-state-icon::after {
+  content: "";
+  position: absolute;
+  bottom: 7px;
+  width: 5px;
+  border-radius: 2px;
+  background: #6a9fd8;
+}
+
+.empty-state-icon::before {
+  left: 8px;
+  height: 16px;
+}
+
+.empty-state-icon::after {
+  left: 17px;
+  height: 10px;
+}
+
+/* ════════════════════════════════════════════
+   Quick status text
+   ════════════════════════════════════════════ */
+.today-card .quick-status {
+  font-size: 13px;
+  color: var(--color-muted);
+  line-height: 1.5;
+  min-height: 20px;
+}
+
+/* padding-bottom for legend not hidden by tab bar */
+.calendar-legend {
+  padding-bottom: 8px;
+}
+
+
+/* ════════════════════════════════════════════
+   Quick wrapper – desktop side-by-side layout
+   ════════════════════════════════════════════ */
+@media (min-width: 900px) {
+  .quick-wrapper {
+    flex-direction: row;
+    align-items: stretch;
+    max-width: 1080px;
+  }
+
+  .salary-preview-card {
+    flex: 6 1 0;
+    min-width: 0;
+  }
+
+  .today-card {
+    flex: 4 1 0;
+    min-width: 0;
+  }
+}
+
+/* ════════════════════════════════════════════
+   Calendar info modal – meta tags (replace emoji)
+   ════════════════════════════════════════════ */
+.calendar-date-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+
+.meta-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.meta-tag::before {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  content: "";
+  flex: 0 0 7px;
+}
+
+.meta-tag-day {
+  background: #edf4ff;
+  color: #2254a8;
+}
+
+.meta-tag-day::before {
+  background: #2463d3;
+}
+
+.meta-tag-lunar {
+  background: #f5f0ff;
+  color: #5b3fa8;
+}
+
+.meta-tag-lunar::before {
+  background: #7c5dd6;
+}
+
+/* Event icon mark – replaces flag/pin emoji */
+.event-icon-mark {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  flex: 0 0 8px;
+}
+
+.calendar-event.holiday .event-icon-mark {
+  background: #d9342b;
+}
+
+.calendar-event.event .event-icon-mark {
+  background: #0d7dd1;
+}
+
+/* ════════════════════════════════════════════
+   Empty state – chart icon (replaces ▥)
+   ════════════════════════════════════════════ */
+.empty-state-icon {
+  display: block;
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 4px;
+  border-radius: 10px;
+  background: #d6e6fa;
+  position: relative;
+}
+
+.empty-state-icon::before,
+.empty-state-icon::after {
+  content: "";
+  position: absolute;
+  bottom: 7px;
+  width: 5px;
+  border-radius: 2px;
+  background: #6a9fd8;
+}
+
+.empty-state-icon::before {
+  left: 8px;
+  height: 16px;
+}
+
+.empty-state-icon::after {
+  left: 17px;
+  height: 10px;
+}
+
+/* ════════════════════════════════════════════
+   Quick status text
+   ════════════════════════════════════════════ */
+.today-card .quick-status {
+  font-size: 13px;
+  color: var(--color-muted);
+  line-height: 1.5;
+  min-height: 20px;
+}
+
+/* padding-bottom for legend not hidden by tab bar */
+.calendar-legend {
+  padding-bottom: 8px;
+}
+
