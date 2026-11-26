@@ -249,6 +249,48 @@ main {
   line-height: 1.4;
 }
 
+.salary-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.salary-visibility-toggle {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,.35);
+  border-radius: 9px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+
+.salary-visibility-toggle:hover {
+  background: rgba(255,255,255,.12);
+}
+
+.salary-visibility-toggle:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.salary-visibility-toggle .salary-eye-open {
+  display: none;
+}
+
+.salary-visibility-toggle.is-hidden .salary-eye-open {
+  display: block;
+}
+
+.salary-visibility-toggle.is-hidden .salary-eye-closed {
+  display: none;
+}
+
 .salary-card-amount {
   font-size: clamp(28px, 8vw, 34px);
   font-weight: 700;

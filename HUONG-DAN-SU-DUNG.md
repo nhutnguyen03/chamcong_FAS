@@ -27,6 +27,7 @@ Lịch đánh dấu riêng Chủ nhật, ngày hiện tại, ngày đang chọn,
 
 ## 2. Xem lương và khoản đã nhận
 
+- Trên đầu mục **Lịch**, nhấn biểu tượng mắt ở thẻ lương để ẩn hoặc hiện lương dự kiến, ngày công, giờ thường và giờ tăng ca. Lựa chọn được lưu trên trình duyệt này.
 - Đầu mục **Lương tháng** có **Tổng quan thu nhập** với bộ chọn tháng riêng; các nút tháng trước/sau và **Tháng này** đổi tháng đang xem. Thẻ tổng quan hiển thị lương ước tính sau các khoản tháng và BHXH, tiền đã nhận, công quy đổi, tăng ca và mức ước tính trung bình trên mỗi công.
 - Phần so sánh nêu chênh lệch lương ước tính và tiền đã nhận so với tháng trước; tỷ lệ phần trăm không được tính khi tháng trước bằng 0 hoặc thiếu dữ liệu. Tháng hiện tại được ghi rõ là chưa kết thúc. Có thể mở **Phân tích thành phần lương** để xem các khoản lưu trong chấm công và **Điều gì thay đổi giữa hai tháng?** để xem chênh lệch công, ca và thành phần đã ghi nhận; đây là so sánh số liệu, không khẳng định nguyên nhân.
 - Biểu đồ cho phép chọn 6 tháng, 12 tháng hoặc năm đang chọn trong **Thống kê năm**; chỉ số gồm lương ước tính, tiền đã nhận, ngày công quy đổi và giờ tăng ca. Tháng không có dữ liệu cho chỉ số đang chọn được đánh dấu riêng, không coi là tháng có giá trị 0.
